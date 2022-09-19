@@ -67,16 +67,6 @@ class ImageSpec extends AnyWordSpec with Matchers {
 
     "support a stream of values" in {
       val image = Image(10,10,3,Scalar.Blue)
-
-      println(image.get(0,0))
-      println(image.values.head)
-
-      println(image.rawValues.take(9).mkString(", "))
-
-
-
-
-
     }
   }
 
