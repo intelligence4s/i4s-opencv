@@ -62,7 +62,7 @@ class Mat[T <: AnyVal : ClassTag](wrapped: org.bytedeco.opencv.opencv_core.Mat)(
   def getN(n: Int, i: Int): IndexedSeq[T] = matable.getN(this,Array(i),n)
   def getN(n: Int, i: Int, is: Int*): IndexedSeq[T] = matable.getN(this,i +: is,n)
 
-  def values: LazyList[T] = valueStream
+  def values: i4s.compat.LazyList[T] = valueStream
 
   def put(i: Int, value: T): Unit = matable.put(this,Array(i),value)
   def put(i: Int, j: Int, value: T): Unit = matable.put(this,Array(i,j),value)

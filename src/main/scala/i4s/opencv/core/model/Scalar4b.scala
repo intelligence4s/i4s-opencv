@@ -4,7 +4,7 @@ object Scalar4b {
   def apply(s: org.bytedeco.opencv.opencv_core.Scalar4i): Scalar4b = new Scalar4b(s.get(0).toByte,s.get(1).toByte,s.get(2).toByte,s.get(3).toByte)
 
   def apply(bytes: Byte*): Scalar4b = {
-    val bs: Array[Byte] = bytes.toArray.take(4).padTo(4, 0)
+    val bs: Array[Byte] = bytes.toArray.take(4).padTo(4, 0.toByte)
     new Scalar4b(bs(0), bs(1), bs(2), bs(3))
   }
 

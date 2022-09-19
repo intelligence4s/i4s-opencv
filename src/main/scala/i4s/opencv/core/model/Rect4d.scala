@@ -7,7 +7,7 @@ object Rect4d {
   def apply(tl: Point2d, br: Point2d): Rect4d = new Rect4d(tl,br)
 
   def apply(vals: Double*): Rect4d = {
-    val vs: Array[Double] = vals.toArray.take(4).padTo(4, 0)
+    val vs: Array[Double] = vals.toArray.take(4).padTo(4, 0d)
     Rect4d(Point2d(vs(0), vs(1)), Point2d(vs(2), vs(3)))
   }
 

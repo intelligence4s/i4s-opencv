@@ -3,6 +3,7 @@ package i4s.opencv.core.model
 import scala.annotation.implicitNotFound
 
 object Math {
+  @implicitNotFound("No member of type class NumberLike in scope for ${T}")
   trait NumberLike[T <: AnyVal] {
     def plus(x: T, y: T): T
     def minus(x: T, y: T): T
@@ -31,7 +32,6 @@ object Math {
 
   object NumberLike {
 
-    @implicitNotFound("No member of type class NumberLike in scope for ${T}")
     implicit object NumberLikeInt extends NumberLike[Int] {
       def plus(x: Int, y: Int): Int = x + y
       def minus(x: Int, y: Int): Int = x - y

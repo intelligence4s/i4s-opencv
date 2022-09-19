@@ -4,7 +4,7 @@ object Scalar {
   def apply(s: org.bytedeco.opencv.opencv_core.Scalar): Scalar = new Scalar(s.get(0),s.get(1),s.get(2),s.get(3))
 
   def apply(vals: Double*): Scalar = {
-    val vs: Array[Double] = vals.toArray.take(4).padTo(4, 0)
+    val vs: Array[Double] = vals.toArray.take(4).padTo(4, 0d)
     new Scalar(vs(0),vs(1),vs(2),vs(3))
   }
 

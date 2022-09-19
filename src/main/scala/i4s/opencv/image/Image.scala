@@ -1,17 +1,16 @@
 package i4s.opencv.image
 
-import com.google.common.hash.{HashCode, Hashing}
 import i4s.opencv.core.constants.AccessFlags
 import i4s.opencv.core.constants.AccessFlags.AccessFlag
 import i4s.opencv.core.model.mats._
 import i4s.opencv.core.model.mats.syntax._
 import i4s.opencv.core.model.{Scalar, Size}
-import i4s.opencv.core.types.{MatTypes, Types}
 import i4s.opencv.core.types.Types.{Cv8U, Type}
+import i4s.opencv.core.types.{MatTypes, Types}
 import org.bytedeco.javacv.{Java2DFrameConverter, OpenCVFrameConverter}
 
 import java.awt.image.BufferedImage
-import scala.util.Using
+import i4s.compat.Using
 
 object Image {
 

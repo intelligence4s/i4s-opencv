@@ -7,7 +7,7 @@ object Rect4f {
   def apply(tl: Point2f, br: Point2f): Rect4f = new Rect4f(tl,br)
 
   def apply(vals: Float*): Rect4f = {
-    val vs: Array[Float] = vals.toArray.take(4).padTo(4, 0)
+    val vs: Array[Float] = vals.toArray.take(4).padTo(4, 0f)
     new Rect4f(Point2f(vs(0), vs(1)), Point2f(vs(2), vs(3)))
   }
 

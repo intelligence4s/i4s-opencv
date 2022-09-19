@@ -5,7 +5,7 @@ object Point2f {
   def apply(p: org.bytedeco.opencv.opencv_core.Point2f): Point2f = new Point2f(p.x,p.y)
 
   def apply(vals: Float*): Point2f = {
-    val vs: Array[Float] = vals.toArray.take(2).padTo(2, 0)
+    val vs: Array[Float] = vals.toArray.take(2).padTo(2, 0f)
     new Point2f(vs(0), vs(1))
   }
 

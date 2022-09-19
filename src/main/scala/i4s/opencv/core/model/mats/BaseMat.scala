@@ -33,14 +33,14 @@ class BaseMat[T <: AnyVal : ClassTag](wrapped: org.bytedeco.opencv.opencv_core.M
     }
   }
 
-  protected def valueStream: LazyList[T] = {
+  protected def valueStream: i4s.compat.LazyList[T] = {
     val topOffset = total() * channels()
 
     val s = totalShape
 
-    def elemAt(offset: Int): LazyList[T] =
+    def elemAt(offset: Int): i4s.compat.LazyList[T] =
       if (offset < topOffset) matable.get(this, toIndices(offset, Nil, s): _*) #:: elemAt(offset + 1)
-      else LazyList.empty[T]
+      else i4s.compat.LazyList.empty[T]
 
     elemAt(0)
   }
