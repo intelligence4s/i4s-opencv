@@ -93,11 +93,11 @@ class MatSpec extends AnyWordSpec with Matchers {
 
     "copy native 2 dim Mat of Float with Mat factory" in {
       val matOfFloats = new org.bytedeco.opencv.opencv_core.Mat(150, 150, MatTypes.makeType(Types.Cv32F, 1), Scalar.White)
-      val floats = new Mat[Float](matOfFloats)
+      val floats = Mat[Float](matOfFloats)
       floats.get(0,0) shouldBe Scalar.White.v0
       val indexer = matOfFloats.createIndexer().asInstanceOf[FloatIndexer]
       indexer.put(0L, 0L, 128f)
-      floats.get(0, 0) shouldBe 128
+      floats.get(0,0) shouldBe Scalar.White.v0
     }
 
     "throw an when wrapping a native Mat with an incompatible type" in {
