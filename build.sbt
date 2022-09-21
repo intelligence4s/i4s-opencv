@@ -8,7 +8,7 @@ val scala31  = "3.1.3"   // up to 3.1.3
 
 ThisBuild / crossScalaVersions := Seq(scala213,scala212)
 ThisBuild / scalaVersion := crossScalaVersions.value.head
-ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / version := "0.2.0-SNAPSHOT"
 ThisBuild / organization := "io.github.intelligence4s"
 ThisBuild / organizationName := "Intelligence4s"
 

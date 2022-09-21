@@ -23,11 +23,11 @@ object Scalar {
   val Gray: Scalar = RGB(128, 128, 128)
   val Black: Scalar = RGB(0, 0, 0)
   val Red: Scalar = RGB(255, 0, 0)
-  val Green:Scalar = RGB(0,255,0)
-  val Blue:Scalar = RGB(0,0,255)
+  val Blue:Scalar = RGB(0,255,0)
+  val Green:Scalar = RGB(0,0,255)
   val Cyan: Scalar = RGB(0, 255, 255)
-  val Magenta: Scalar = RGB(255, 0, 255)
-  val Yellow: Scalar = RGB(255, 255, 0)
+  val Yellow: Scalar = RGB(255, 0, 255)
+  val Magenta: Scalar = RGB(255, 255, 0)
 }
 
 case class Scalar(v0: Double, v1: Double, v2: Double, v3: Double) extends org.bytedeco.opencv.opencv_core.Scalar(v0,v1,v2,v3) with ScalarLike[Double] {

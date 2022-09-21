@@ -20,7 +20,6 @@ object ViewMaster {
 
       canvas.addWindowListener(new WindowAdapter() {
         override def windowClosing(windowEvent: _root_.java.awt.event.WindowEvent): Unit = {
-          println(s"Closing window!")
           willClose.complete(Try(true))
           super.windowClosed(windowEvent)
         }

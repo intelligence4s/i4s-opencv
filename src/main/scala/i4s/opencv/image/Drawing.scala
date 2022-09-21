@@ -1,11 +1,14 @@
 package i4s.opencv.image
 
+import i4s.opencv.core.model.mats.{MappedMat, Mat}
+import i4s.opencv.core.model.{Point, Point2d, Rect, RotatedRect, Scalar, Size, Size2d}
+import i4s.opencv.core.types.Types
 import i4s.opencv.image.constants.HersheyFonts.HersheyFont
 import i4s.opencv.image.constants.LineTypes.LineType
 import i4s.opencv.image.constants.MarkerTypes.MarkerType
 import i4s.opencv.image.constants.{LineTypes, MarkerTypes}
 import org.bytedeco.opencv.global.opencv_imgproc
-import org.bytedeco.opencv.opencv_core._
+import org.bytedeco.opencv.opencv_core.{MatVector, Point2dVector, PointVector}
 
 object Drawing extends Drawing
 
@@ -30,21 +33,22 @@ trait Drawing {
   def clipLine(imgRect: Rect, pt1: Point, pt2: Point): Boolean =
     opencv_imgproc.clipLine(imgRect, pt1, pt2)
 
-  def ellipse2Poly(center: Point, axes: Size, angle: Int, arcStart: Int, arcEnd: Int, delta: Int): PointVector = {
+  def ellipse2Poly(center: Point, axes: Size, angle: Int, arcStart: Int, arcEnd: Int, delta: Int): Seq[Point] = {
     val pointVector = new PointVector()
     opencv_imgproc.ellipse2Poly(center, axes, angle, arcStart, arcEnd, delta, pointVector)
     pointVector
   }
 
-
-  def ellipse2Poly(center: Point2d, axes: Size2d, angle: Int, arcStart: Int, arcEnd: Int, delta: Int): Point2dVector = {
+  def ellipse2Poly(center: Point2d, axes: Size2d, angle: Int, arcStart: Int, arcEnd: Int, delta: Int): Seq[Point2d] = {
     val pt2dVector = new Point2dVector()
     opencv_imgproc.ellipse2Poly(center, axes, angle, arcStart, arcEnd, delta, pt2dVector)
     pt2dVector
   }
 
   implicit class ImageDrawing(image: Image) {
-  def circle(center: Point, radius: Int, color: Scalar, thickness: Int, lineType: LineType, shift: Int): Unit =
+    import i4s.opencv.core.model.mats.syntax._
+
+    def circle(center: Point, radius: Int, color: Scalar, thickness: Int, lineType: LineType, shift: Int): Unit =
       opencv_imgproc.circle(image, center, radius, color, thickness, lineType.id, shift)
 
     def circle(center: Point, radius: Int, color: Scalar): Unit =
@@ -86,36 +90,77 @@ trait Drawing {
     def putText(text: String, org: Point, fontFace: HersheyFont, fontScale: Double, italic: Boolean, color: Scalar): Unit =
       putText(text,org,fontFace,fontScale,italic,color,1,LineTypes.Line8,bottomLeftOrigin = false)
 
-    def fillConvexPoly(points: Mat, color: Scalar, lineType: LineType, shift: Int): Unit =
-      opencv_imgproc.fillConvexPoly(image,points,color,lineType.id,shift)
-
-    def fillConvexPoly(points: Mat, color: Scalar): Unit =
-      fillConvexPoly(points,color,LineTypes.Line8,shift = 0)
-
-    def fillPoly(pts: Seq[Mat], color: Scalar, lineType: LineType, shift: Int, offset: Point): Unit =
-      opencv_imgproc.fillPoly(image,new MatVector(pts:_*),color,lineType.id,shift,offset)
-
-    def fillPoly(pts: Seq[Mat], color: Scalar): Unit =
-      fillPoly(pts, color, LineTypes.Line8, shift = 0, offset = new Point())
-
-    def fillPoly(pts: Array[Point], npts: Int, ncontours: Int, color: Scalar, lineType: LineType, shift: Int, offset: Point): Unit = {
-      opencv_imgproc.fillPoly(image,pts.asPointer,npts.asPointer,ncontours,color,lineType.id,shift,offset)
+    def fillConvexPoly(points: Seq[Point], color: Scalar, lineType: LineType, shift: Int): Unit = {
+      val ptMat = MappedMat[Point,Int](points.size,Some(Types.Cv32S),Some(2))
+      ptMat.put(0,points)
+      opencv_imgproc.fillConvexPoly(image,ptMat,color,lineType.id,shift)
     }
 
-    def polylines(pts: Seq[Mat], isClosed: Boolean, color: Scalar, thickness: Int, lineType: LineType, shift: Int): Unit =
-      opencv_imgproc.polylines(image,new MatVector(pts:_*),isClosed,color,thickness,lineType.id,shift)
+    def fillConvexPoly(points: Seq[Point], color: Scalar): Unit =
+      fillConvexPoly(points,color,LineTypes.Line8,shift = 0)
 
-    def polylines(pts: Seq[Mat], isClosed: Boolean, color: Scalar): Unit =
+    def fillPoly(pts: Seq[Point], color: Scalar, lineType: LineType, shift: Int, offset: Point): Unit = {
+      val ptMat = MappedMat[Point, Int](pts.size, Some(Types.Cv32S), Some(2))
+      ptMat.put(0,pts)
+      opencv_imgproc.fillPoly(image, Seq(ptMat), color, lineType.id, shift, offset)
+    }
+
+    def fillPoly(pts: Seq[Point], color: Scalar): Unit =
+      fillPoly(pts, color, LineTypes.Line8, shift = 0, offset = Point())
+
+    def fillPolyList(pts: Seq[Seq[Point]], color: Scalar, lineType: LineType, shift: Int, offset: Point): Unit = {
+      val ptMats = pts.map { pointSeq =>
+        val ptMat = MappedMat[Point,Int](pointSeq.size,Some(Types.Cv32S),Some(2))
+        ptMat.put(0,pointSeq)
+        ptMat
+      }
+      opencv_imgproc.fillPoly(image,ptMats,color,lineType.id,shift,offset)
+    }
+
+    def fillPolyList(pts: Seq[Seq[Point]], color: Scalar): Unit =
+    fillPolyList(pts, color, LineTypes.Line8, shift = 0, offset = Point())
+
+    def polyline(pts: Seq[Point], isClosed: Boolean, color: Scalar, thickness: Int, lineType: LineType, shift: Int): Unit = {
+      val ptMat = MappedMat[Point, Int](pts.size, Some(Types.Cv32S), Some(2))
+      ptMat.put(0, pts)
+      opencv_imgproc.polylines(image,Seq(ptMat),isClosed,color,thickness,lineType.id,shift)
+    }
+
+    def polyline(pts: Seq[Point], isClosed: Boolean, color: Scalar): Unit =
+      polyline(pts,isClosed,color,thickness = 1,LineTypes.Line8,shift = 0)
+
+    def polylines(pts: Seq[Seq[Point]], isClosed: Boolean, color: Scalar, thickness: Int, lineType: LineType, shift: Int): Unit = {
+      val ptMats = pts.map { pointSeq =>
+        val ptMat = MappedMat[Point, Int](pointSeq.size, Some(Types.Cv32S), Some(2))
+        ptMat.put(0, pointSeq)
+        ptMat
+      }
+      opencv_imgproc.polylines(image,ptMats,isClosed,color,thickness,lineType.id,shift)
+    }
+
+    def polylines(pts: Seq[Seq[Point]], isClosed: Boolean, color: Scalar): Unit =
       polylines(pts,isClosed,color,thickness = 1,LineTypes.Line8,shift = 0)
 
-    def polylines(pts: Array[Point], npts: Int, ncontours: Int, isClosed: Boolean, color: Scalar, thickness: Int, lineType: LineType, shift: Int): Unit =
-      opencv_imgproc.polylines(image,pts.asPointer,npts.asPointer,ncontours,isClosed,color,thickness,lineType.id,shift)
+    def drawContour(contour: Seq[Point], color: Scalar, thickness: Int, lineType: LineType, hierarchy: Mat[Int], maxLevel: Int, offset: Point): Unit = {
+      val contourMat = MappedMat[Point, Int](contour.size, Some(Types.Cv32S), Some(2))
+      contourMat.put(0,contour)
+      opencv_imgproc.drawContours(image,Seq(contourMat),0,color,thickness,lineType.id,hierarchy,maxLevel,offset)
+    }
 
-    def drawContours(contours: Seq[Mat], contourIdx: Int, color: Scalar, thickness: Int, lineType: LineType, hierarchy: Mat, maxLevel: Int, offset: Point): Unit =
-      opencv_imgproc.drawContours(image,new MatVector(contours:_*),contourIdx,color,thickness,lineType.id,hierarchy,maxLevel,offset)
+    def drawContour(contour: Seq[Point], color: Scalar): Unit =
+      drawContour(contour,color,thickness = 1,LineTypes.Line8,hierarchy = Mat[Int](0,0),maxLevel = Int.MaxValue,offset = Point())
 
-    def drawContours(contours: Seq[Mat], contourIdx: Int, color: Scalar): Unit =
-      drawContours(contours,contourIdx,color,thickness = 1,LineTypes.Line8,hierarchy = new Mat(),maxLevel = Int.MaxValue,offset = new Point())
+    def drawContours(contours: Seq[Seq[Point]], color: Scalar, thickness: Int, lineType: LineType, hierarchy: Mat[Int], maxLevel: Int, offset: Point): Unit = {
+      val contourMats = contours.map { pointSeq =>
+        val ptMat = MappedMat[Point, Int](pointSeq.size, Some(Types.Cv32S), Some(2))
+        ptMat.put(0, pointSeq)
+        ptMat
+      }
+      opencv_imgproc.drawContours(image,contourMats,-1,color,thickness,lineType.id,hierarchy,maxLevel,offset)
+    }
+
+    def drawContours(contours: Seq[Seq[Point]], color: Scalar): Unit =
+      drawContours(contours,color,thickness = 1,LineTypes.Line8,hierarchy = Mat[Int](0,0),maxLevel = Int.MaxValue,offset = Point())
 
   }
 }

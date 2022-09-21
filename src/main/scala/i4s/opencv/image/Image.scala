@@ -14,29 +14,29 @@ import i4s.compat.Using
 
 object Image {
 
-  def apply(rows: Int, cols: Int, channels: Int, init: Scalar): Image =
-    new Image(new org.bytedeco.opencv.opencv_core.Mat(Array(rows,cols),MatTypes.makeType(Cv8U,channels),init))
+  def apply(width: Int, height: Int, channels: Int, init: Scalar): Image =
+    new Image(new org.bytedeco.opencv.opencv_core.Mat(Array(height,width),MatTypes.makeType(Cv8U,channels),init))
 
-  def apply(rows: Int, cols: Int, channels: Int): Image =
-    new Image(new org.bytedeco.opencv.opencv_core.Mat(Array(rows,cols),MatTypes.makeType(Cv8U,channels)))
+  def apply(width: Int, height: Int, channels: Int): Image =
+    new Image(new org.bytedeco.opencv.opencv_core.Mat(Array(height,width),MatTypes.makeType(Cv8U,channels),Scalar.Black))
 
-  def apply(rows: Int, cols: Int, init: Scalar): Image =
-    new Image(new org.bytedeco.opencv.opencv_core.Mat(Array(rows,cols),MatTypes.makeType(Cv8U,3),init))
+  def apply(width: Int, height: Int, init: Scalar): Image =
+    new Image(new org.bytedeco.opencv.opencv_core.Mat(Array(height,width),MatTypes.makeType(Cv8U,3),init))
 
-  def apply(rows: Int, cols: Int): Image =
-    new Image(new org.bytedeco.opencv.opencv_core.Mat(Array(rows,cols),MatTypes.makeType(Cv8U,3)))
+  def apply(width: Int, height: Int): Image =
+    new Image(new org.bytedeco.opencv.opencv_core.Mat(Array(height,width),MatTypes.makeType(Cv8U,3),Scalar.Black))
 
   def apply(size: Size, channels: Int, init: Scalar): Image =
     new Image(new org.bytedeco.opencv.opencv_core.Mat(size,MatTypes.makeType(Cv8U,channels),init))
 
   def apply(size: Size, channels: Int): Image =
-    new Image(new org.bytedeco.opencv.opencv_core.Mat(size,MatTypes.makeType(Cv8U,channels)))
+    new Image(new org.bytedeco.opencv.opencv_core.Mat(size,MatTypes.makeType(Cv8U,channels),Scalar.Black))
 
   def apply(size: Size, init: Scalar): Image =
     new Image(new org.bytedeco.opencv.opencv_core.Mat(size,MatTypes.makeType(Cv8U,3),init))
 
   def apply(size: Size): Image =
-    new Image(new org.bytedeco.opencv.opencv_core.Mat(size,MatTypes.makeType(Cv8U,3)))
+    new Image(new org.bytedeco.opencv.opencv_core.Mat(size,MatTypes.makeType(Cv8U,3),Scalar.Black))
 
   def apply(wrapped: org.bytedeco.opencv.opencv_core.UMat, accessFlag: AccessFlag): Image =
     new Image(wrapped.getMat(accessFlag.id).clone)

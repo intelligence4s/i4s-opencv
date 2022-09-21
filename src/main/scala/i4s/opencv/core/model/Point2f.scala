@@ -11,6 +11,7 @@ object Point2f {
 
   import scala.language.implicitConversions
   implicit def p2p(p: org.bytedeco.opencv.opencv_core.Point2f): Point2f = apply(p)
+  implicit def pl2p(pl: PointLike[Float]): Point2f = pl.asInstanceOf[Point2f]
 }
 
 class Point2f(override val x: Float, override val y: Float) extends org.bytedeco.opencv.opencv_core.Point2f(x,y) with PointLike[Float] {

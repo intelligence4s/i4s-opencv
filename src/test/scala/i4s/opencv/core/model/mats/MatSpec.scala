@@ -10,6 +10,10 @@ class MatSpec extends AnyWordSpec with Matchers {
   "Mat" should {
     import i4s.opencv.core.model.mats.syntax._
 
+    "supports a zero-sized matrix" in {
+      val empty = Mat[Int](0,0)
+    }
+
     "wrap native Mat of UBytes with Mat[Int] constructor" in {
       val matOfPixels = new org.bytedeco.opencv.opencv_core.Mat(150, 150, MatTypes.makeType(Types.Cv8U, 3), Scalar.Red)
       val pixels = new Mat[Int](matOfPixels)
