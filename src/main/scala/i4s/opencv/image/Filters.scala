@@ -43,13 +43,13 @@ trait Filters {
 
   implicit class ImageFilters(image: Image) {
 
-   def medianBlur(ksize: Int): Image = {
-     val dst = new Mat()
-     opencv_imgproc.medianBlur(image,dst,ksize)
-     dst
-   }
+    def medianBlur(ksize: Int): Image = {
+      val dst = new Mat()
+      opencv_imgproc.medianBlur(image,dst,ksize)
+      dst
+    }
 
-    def gaussianBlur(ksize: Size, sigmaX: Double, sigmaY: Double /*=0*/ , borderType: BorderType /*=cv::BORDER_DEFAULT*/): Image = {
+    def gaussianBlur(ksize: Size, sigmaX: Double, sigmaY: Double, borderType: BorderType): Image = {
       val dst = new Mat()
       opencv_imgproc.GaussianBlur(image,dst,ksize,sigmaX,sigmaY,borderType.id)
       dst
@@ -76,14 +76,14 @@ trait Filters {
     def boxFilter(ddepth: Type, ksize: Size): Image =
       boxFilter(ddepth,ksize,new Point(-1,-1),normalize = true,BorderTypes.Default)
 
-    def sqrBoxFilter(ddepth: Type, ksize: Size, anchor: Point, normalize: Boolean, borderType: BorderType): Image = {
+    def squareBoxFilter(ddepth: Type, ksize: Size, anchor: Point, normalize: Boolean, borderType: BorderType): Image = {
       val dst = new Mat()
       opencv_imgproc.sqrBoxFilter(image,dst,ddepth.id,ksize,anchor,normalize,borderType.id)
       dst
     }
 
-    def sqrBoxFilter(ddepth: Type, ksize: Size): Image =
-      sqrBoxFilter(ddepth,ksize,new Point(-1,-1),normalize = true,BorderTypes.Default)
+    def squareBoxFilter(ddepth: Type, ksize: Size): Image =
+      squareBoxFilter(ddepth,ksize,new Point(-1,-1),normalize = true,BorderTypes.Default)
 
     def blur(ksize: Size, anchor: Point, borderType: BorderType): Image = {
       val dst = new Mat()

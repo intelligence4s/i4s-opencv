@@ -17,21 +17,19 @@ object RotatedRect {
 
 case class RotatedRect(override val center: Point2f, override val size: Size2f, override val angle: Float) extends org.bytedeco.opencv.opencv_core.RotatedRect(center,size,angle) {
   def this(tl: Point2f, br: Point2f, angle: Float) =
-    this(Point2f((br.x+tl.x)/2,(br.y+tl.y)/2),Size2f(math.abs(br.x-tl.x),math.abs(br.y-tl.y)),angle)
+    this(Point2f((br.x + tl.x) / 2, (br.y + tl.y) / 2), Size2f(math.abs(br.x - tl.x), math.abs(br.y - tl.y)), angle)
 
-  def moveTo(p: Point2f): RotatedRect = RotatedRect(p,size,angle)
+  def moveTo(p: Point2f): RotatedRect = RotatedRect(p, size, angle)
+
   def scaleBy(sz: Size2f): RotatedRect = {
     val updated: Point2f = center * Point2f(sz.width, sz.height)
     RotatedRect(updated, size, angle)
   }
 
   def shiftBy(sz: Size2f): RotatedRect = {
-    val updated: Point2f = center + Point2f(sz.width,sz.height)
-    RotatedRect(updated,size,angle)
+    val updated: Point2f = center + Point2f(sz.width, sz.height)
+    RotatedRect(updated, size, angle)
   }
 
-  def rotateBy(diff: Float): RotatedRect = RotatedRect(center,size,angle + diff)
-
-  def tl(): Point2f = this.tl()
-  def br(): Point2f = this.br()
+  def rotateBy(diff: Float): RotatedRect = RotatedRect(center, size, angle + diff)
 }

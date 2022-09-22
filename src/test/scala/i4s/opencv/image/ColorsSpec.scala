@@ -24,14 +24,14 @@ class ColorsSpec extends AnyWordSpec with Matchers {
       image.matType shouldBe MatTypes.Cv8UC3
 
       val hash = image.rawValues.foldLeft(Hashing.sha256().newHasher())(_ putInt _).hash()
-      hash shouldBe HashCode.fromString("cab0ca579ef72e6e6baf3670a811c57e0472bc65a3288c855a3e63e7b44d6764")
+      hash shouldBe HashCode.fromString("b0571a3555c7a248fceccf9bb364903136d1abedfe5b2e14e21cddf453b0fa06")
 
       gray.channels shouldBe 1
       gray.dataType shouldBe Types.Cv8U
       gray.matType shouldBe MatTypes.Cv8UC1
 
       val bwhash = gray.rawValues.foldLeft(Hashing.sha256().newHasher())(_ putInt _).hash()
-      bwhash shouldBe HashCode.fromString("6870926911b9d1d01045257fc0a560ec4eec2b0eeedcb749eb85833580e7a8d2")
+      bwhash shouldBe HashCode.fromString("2b13ab05bf81b9ae1e8e2b6e22088b53608bda7e95ae088be60f7be0d8298dd7")
     }
 
     "support applying a color map" in {
