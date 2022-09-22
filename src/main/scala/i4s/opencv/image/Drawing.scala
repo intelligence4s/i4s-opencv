@@ -7,19 +7,18 @@ import i4s.opencv.image.constants.HersheyFonts.HersheyFont
 import i4s.opencv.image.constants.LineTypes.LineType
 import i4s.opencv.image.constants.MarkerTypes.MarkerType
 import i4s.opencv.image.constants.{LineTypes, MarkerTypes}
+import org.bytedeco.javacpp.IntPointer
 import org.bytedeco.opencv.global.opencv_imgproc
 import org.bytedeco.opencv.opencv_core.{MatVector, Point2dVector, PointVector}
 
 object Drawing extends Drawing
 
 trait Drawing {
-  import i4s.opencv.TypeConverters._
-
-  def getTextSize(text: String, fontFace: HersheyFont, italic: Boolean, fontScale: Double, thickness: Int, baseLine: Int): Size =
-    opencv_imgproc.getTextSize(text, fontFace.face(italic), fontScale, thickness, baseLine.asPointer)
-
-  def getTextSize(text: String, fontFace: HersheyFont, italic: Boolean, fontScale: Double, thickness: Int, baseLine: Array[Int]): Size =
-    opencv_imgproc.getTextSize(text, fontFace.face(italic), fontScale, thickness, baseLine)
+  def getTextSize(text: String, fontFace: HersheyFont, italic: Boolean, fontScale: Double, thickness: Int): (Size,Int) = {
+    val baseLinePointer = new IntPointer(1L)
+    val size = opencv_imgproc.getTextSize(text, fontFace.face(italic), fontScale, thickness, baseLinePointer)
+    (size,baseLinePointer.get())
+  }
 
   def getFontScaleFromHeight(fontFace: HersheyFont, italic: Boolean, pixelHeight: Int, thickness: Int): Double =
     opencv_imgproc.getFontScaleFromHeight(fontFace.face(italic), pixelHeight, thickness)

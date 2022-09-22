@@ -1,7 +1,7 @@
 package i4s.opencv.image
 
 import com.google.common.hash.{HashCode, Hashing}
-import i4s.opencv.core.model.{Point, Point2f, Rect, RotatedRect, Scalar, Size2f}
+import i4s.opencv.core.model.{Point, Point2f, Rect, RotatedRect, Scalar, Size, Size2f}
 import i4s.opencv.image.constants.{HersheyFonts, LineTypes, MarkerTypes}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -199,6 +199,49 @@ class DrawingSpec extends AnyWordSpec with Matchers {
       hash shouldBe HashCode.fromString("f3cdbc01330a4ddd188c4024a93d54d75d9245160133209fbab3899f2090d90a")
 
 //      val closed = image.show("Contours")
+//      Await.ready(closed, 1.minute)
+    }
+
+    "calculate text size" in {
+      val (textSize,baseLine) = Drawing.getTextSize("Luke, I AM your father.",HersheyFonts.Plain,false,1.2d,1)
+
+      val image = Image(237,150, 3, Scalar.Black)
+      image.rectangle(Point(0,82),Point(237,88),Scalar.Blue)
+      image.rectangle(Point(0,70),Point(237,82),Scalar.Red)
+      image.putText("Luke, I AM your father", Point(0,82), HersheyFonts.Plain, 1.2d, false, Scalar.White)
+
+//      val closed = image.show("Contour")
+//      Await.ready(closed, 1.minute)
+
+      textSize shouldBe Size(237,12)
+      baseLine shouldBe 6
+    }
+
+    "calculate font scale from height" in {
+      val scale = Drawing.getFontScaleFromHeight(HersheyFonts.Plain,false,12)
+      scale shouldBe 1.2222222222222223d
+    }
+
+    "detect a clipped line" in {
+      val clipped = Drawing.clipLine(Rect(0,0,100,50),Point(25,25),Point(25,75))
+      clipped shouldBe true
+
+      val notClipped = Drawing.clipLine(Rect(0,0,100,50),Point(105,5),Point(130,30))
+      notClipped shouldBe false
+    }
+
+    "calculate a poly from an ellipse" in {
+      val points = Drawing.ellipse2Poly(Point(50,50),Size(80,50),40,0,90,5)
+
+      val expected = Seq(Point(111,101), Point(108,105), Point(105,107), Point(101,110), Point(97,111), Point(92,113),
+        Point(87,114), Point(82,114), Point(76,114), Point(71,113), Point(65,112), Point(59,111), Point(53,109),
+        Point(47,106), Point(41,104), Point(35,100), Point(29,97), Point(23,93), Point(18,88))
+      points shouldBe expected
+
+//      val image = Image(200,200,Scalar.Black)
+//      image.polyline(points,false,Scalar.Blue)
+//
+//      val closed = image.show("Contour")
 //      Await.ready(closed, 1.minute)
     }
   }
