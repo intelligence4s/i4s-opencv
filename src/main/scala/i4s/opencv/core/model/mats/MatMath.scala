@@ -377,7 +377,7 @@ trait MatMath[T <: AnyVal] {
 
   def mixChannels(map: IndexedSeq[(Int, Int)])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
     val shape = self.shape
-    val dst = Mat[T](depth = Some(Types(self.depth)), ch = Some(shape.size), shape.head, shape.tail:_*)
+    val dst = Mat[T](Types(self.depth),Some(shape.size),shape.head,shape.tail:_*)
 
     opencv_core.mixChannels(new MatVector(self), new MatVector(dst), new IntPointer(map.flatMap(t => Seq(t._1, t._2)): _*))
     dst

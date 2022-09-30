@@ -18,11 +18,11 @@ object Mat {
   def apply[T <: AnyVal](rows: Int, init: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     new Mat[T](new org.bytedeco.opencv.opencv_core.Mat(Array(rows),MatTypes.makeType(matable.depth,matable.channels),init))
 
-  def apply[T <: AnyVal](rows: Int, depth: Option[Type], ch: Option[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    new Mat[T](new org.bytedeco.opencv.opencv_core.Mat(Array(rows),MatTypes.makeType(depth.getOrElse(matable.depth),ch.getOrElse(matable.channels))))
+  def apply[T <: AnyVal](depth: Type, ch: Option[Int], rows: Int)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    new Mat[T](new org.bytedeco.opencv.opencv_core.Mat(Array(rows),MatTypes.makeType(depth,ch.getOrElse(matable.channels))))
 
-  def apply[T <: AnyVal](rows: Int, depth: Option[Type], ch: Option[Int], init: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    new Mat[T](new org.bytedeco.opencv.opencv_core.Mat(Array(rows),MatTypes.makeType(depth.getOrElse(matable.depth),ch.getOrElse(matable.channels)),init))
+  def apply[T <: AnyVal](depth: Type, ch: Option[Int], rows: Int, init: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    new Mat[T](new org.bytedeco.opencv.opencv_core.Mat(Array(rows),MatTypes.makeType(depth,ch.getOrElse(matable.channels)),init))
 
   def apply[T <: AnyVal](rows: Int, cols: Int)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     new Mat[T](new org.bytedeco.opencv.opencv_core.Mat(Array(rows,cols),MatTypes.makeType(matable.depth,matable.channels)))
@@ -30,23 +30,23 @@ object Mat {
   def apply[T <: AnyVal](rows: Int, cols: Int, init: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     new Mat[T](new org.bytedeco.opencv.opencv_core.Mat(Array(rows,cols),MatTypes.makeType(matable.depth,matable.channels),init))
 
-  def apply[T <: AnyVal](rows: Int, cols: Int, depth: Option[Type], ch: Option[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    new Mat[T](new org.bytedeco.opencv.opencv_core.Mat(Array(rows,cols),MatTypes.makeType(depth.getOrElse(matable.depth),ch.getOrElse(matable.channels))))
+  def apply[T <: AnyVal](depth: Type, ch: Option[Int], rows: Int, cols: Int)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    new Mat[T](new org.bytedeco.opencv.opencv_core.Mat(Array(rows,cols),MatTypes.makeType(depth,ch.getOrElse(matable.channels))))
 
-  def apply[T <: AnyVal](rows: Int, cols: Int, depth: Option[Type], ch: Option[Int], init: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    new Mat[T](new org.bytedeco.opencv.opencv_core.Mat(Array(rows,cols),MatTypes.makeType(depth.getOrElse(matable.depth),ch.getOrElse(matable.channels)),init))
+  def apply[T <: AnyVal](depth: Type, ch: Option[Int], rows: Int, cols: Int, init: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    new Mat[T](new org.bytedeco.opencv.opencv_core.Mat(Array(rows,cols),MatTypes.makeType(depth,ch.getOrElse(matable.channels)),init))
 
   def apply[T <: AnyVal](dim1: Int, dims: Int*)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     new Mat[T](new org.bytedeco.opencv.opencv_core.Mat((dim1 +: dims).toArray,MatTypes.makeType(matable.depth,matable.channels)))
 
-  def apply[T <: AnyVal](init: Scalar,dim1: Int, dims: Int*)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+  def apply[T <: AnyVal](init: Scalar, dim1: Int, dims: Int*)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     new Mat[T](new org.bytedeco.opencv.opencv_core.Mat((dim1 +: dims).toArray,MatTypes.makeType(matable.depth,matable.channels),init))
 
-  def apply[T <: AnyVal](depth: Option[Type], ch: Option[Int], dim1: Int, dims: Int*)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    new Mat[T](new org.bytedeco.opencv.opencv_core.Mat((dim1 +: dims).toArray,MatTypes.makeType(depth.getOrElse(matable.depth),ch.getOrElse(matable.channels))))
+  def apply[T <: AnyVal](depth: Type, ch: Option[Int], dim1: Int, dims: Int*)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    new Mat[T](new org.bytedeco.opencv.opencv_core.Mat((dim1 +: dims).toArray,MatTypes.makeType(depth,ch.getOrElse(matable.channels))))
 
-  def apply[T <: AnyVal](depth: Option[Type], ch: Option[Int], init: Scalar, dim1: Int, dims: Int*)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    new Mat[T](new org.bytedeco.opencv.opencv_core.Mat((dim1 +: dims).toArray,MatTypes.makeType(depth.getOrElse(matable.depth),ch.getOrElse(matable.channels)),init))
+  def apply[T <: AnyVal](depth: Type, ch: Option[Int], init: Scalar, dim1: Int, dims: Int*)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    new Mat[T](new org.bytedeco.opencv.opencv_core.Mat((dim1 +: dims).toArray,MatTypes.makeType(depth,ch.getOrElse(matable.channels)),init))
 
   def apply[T <: AnyVal](wrapped: org.bytedeco.opencv.opencv_core.Mat)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     new Mat[T](wrapped.clone)
@@ -60,11 +60,11 @@ object Mat {
   def zeros[T <: AnyVal](rows: Int, cols: Int)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
     new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.zeros(rows,cols,MatTypes.makeType(matable.depth,matable.channels)))
 
-  def zeros[T <: AnyVal](depth: Option[Type], ch: Option[Int], size: Size)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-    new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.zeros(size,MatTypes.makeType(depth.getOrElse(matable.depth),ch.getOrElse(matable.channels))))
+  def zeros[T <: AnyVal](depth: Type, ch: Option[Int], size: Size)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+    new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.zeros(size,MatTypes.makeType(depth,ch.getOrElse(matable.channels))))
 
-  def zeros[T <: AnyVal](depth: Option[Type], ch: Option[Int], rows: Int, cols: Int)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-    new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.zeros(rows,cols,MatTypes.makeType(depth.getOrElse(matable.depth),ch.getOrElse(matable.channels))))
+  def zeros[T <: AnyVal](depth: Type, ch: Option[Int], rows: Int, cols: Int)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+    new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.zeros(rows,cols,MatTypes.makeType(depth,ch.getOrElse(matable.channels))))
 
   def ones[T <: AnyVal](size: Size)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
   new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.ones(size,MatTypes.makeType(matable.depth,matable.channels)))
@@ -72,11 +72,11 @@ object Mat {
   def ones[T <: AnyVal](rows: Int, cols: Int)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
   new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.ones(rows,cols,MatTypes.makeType(matable.depth,matable.channels)))
 
-  def ones[T <: AnyVal](depth: Option[Type], ch: Option[Int], size: Size)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-  new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.ones(size,MatTypes.makeType(depth.getOrElse(matable.depth),ch.getOrElse(matable.channels))))
+  def ones[T <: AnyVal](depth: Type, ch: Option[Int], size: Size)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.ones(size,MatTypes.makeType(depth,ch.getOrElse(matable.channels))))
 
-  def ones[T <: AnyVal](depth: Option[Type], ch: Option[Int], rows: Int, cols: Int)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-  new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.ones(rows,cols,MatTypes.makeType(depth.getOrElse(matable.depth),ch.getOrElse(matable.channels))))
+  def ones[T <: AnyVal](depth: Type, ch: Option[Int], rows: Int, cols: Int)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.ones(rows,cols,MatTypes.makeType(depth,ch.getOrElse(matable.channels))))
 
   def eye[T <: AnyVal](size: Size)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
     new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.eye(size,MatTypes.makeType(matable.depth,matable.channels)))
@@ -84,11 +84,11 @@ object Mat {
   def eye[T <: AnyVal](rows: Int, cols: Int)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
     new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.eye(rows,cols,MatTypes.makeType(matable.depth,matable.channels)))
 
-  def eye[T <: AnyVal](depth: Option[Type], ch: Option[Int], size: Size)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-    new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.eye(size,MatTypes.makeType(depth.getOrElse(matable.depth),ch.getOrElse(matable.channels))))
+  def eye[T <: AnyVal](depth: Type, ch: Option[Int], size: Size)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+    new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.eye(size,MatTypes.makeType(depth,ch.getOrElse(matable.channels))))
 
-  def eye[T <: AnyVal](depth: Option[Type], ch: Option[Int], rows: Int, cols: Int)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-    new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.eye(rows,cols,MatTypes.makeType(depth.getOrElse(matable.depth),ch.getOrElse(matable.channels))))
+  def eye[T <: AnyVal](depth: Type, ch: Option[Int], rows: Int, cols: Int)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+    new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.eye(rows,cols,MatTypes.makeType(depth,ch.getOrElse(matable.channels))))
 }
 
 class Mat[T <: AnyVal : ClassTag](wrapped: org.bytedeco.opencv.opencv_core.Mat)(implicit matable: Matable[T])

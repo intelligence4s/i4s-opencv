@@ -268,10 +268,10 @@ class MatExprSpec extends AnyWordSpec with Matchers {
     }
 
     "supports logical operators" in {
-      val allOff = Mat[Int](5,5, Some(Types.Cv8U), Some(1), Scalar(0))
-      val allOn = Mat[Int](5,5, Some(Types.Cv8U), Some(1), Scalar(255))
-      val lowerOrder = Mat[Int](5,5, Some(Types.Cv8U), Some(1), Scalar(15))
-      val higherOrder = Mat[Int](5,5, Some(Types.Cv8U), Some(1), Scalar(240))
+      val allOff = Mat[Int](Types.Cv8U, Some(1), 5,5, Scalar(0))
+      val allOn = Mat[Int](Types.Cv8U, Some(1), 5,5, Scalar(255))
+      val lowerOrder = Mat[Int](Types.Cv8U, Some(1), 5, 5, Scalar(15))
+      val higherOrder = Mat[Int](Types.Cv8U, Some(1), 5, 5, Scalar(240))
 
       (allOff & allOn).getN(allOff.total.toInt,0) shouldBe Array.fill(allOn.total.toInt)(0)
       (lowerOrder & higherOrder).getN(allOff.total.toInt,0) shouldBe Array.fill(allOn.total.toInt)(0)
