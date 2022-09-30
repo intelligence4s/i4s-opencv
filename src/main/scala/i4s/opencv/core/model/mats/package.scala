@@ -2,8 +2,17 @@ package i4s.opencv.core.model
 import i4s.opencv.core.types.Types
 import i4s.opencv.core.types.Types.Type
 
+import scala.reflect.ClassTag
+
 package object mats {
   object syntax {
+    import scala.language.implicitConversions
+    implicit def matExpr2mat[T <: AnyVal](matExpr: MatExpr[T]): Mat[T] = matExpr.asMat()
+    implicit def double2Scalar(d: Double): Scalar = Scalar(d)
+
+    implicit class ScalarExprSupport(val self: Scalar) extends ScalarExpressions
+    implicit class DoubleExprSupport(val self: Double) extends DoubleExpressions
+
     implicit val byteMatable: Matable[Byte] = new Matable[Byte] {
       override def depth: Type = Types.Cv8S
     }
@@ -71,4 +80,5 @@ package object mats {
     implicit val floatIndexedSeqMatable: IndexedSeqMatable[Float] = new IndexedSeqMatable[Float]
     implicit val intIndexedSeqMatable: IndexedSeqMatable[Int] = new IndexedSeqMatable[Int]
   }
+
 }

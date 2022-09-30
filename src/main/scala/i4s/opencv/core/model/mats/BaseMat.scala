@@ -45,7 +45,6 @@ class BaseMat[T <: AnyVal : ClassTag](wrapped: org.bytedeco.opencv.opencv_core.M
     elemAt(0)
   }
 
-
   // Disallow calls to underlaying Mat object that will cause side-effects...
   override def create(size: opencv_core.Size, `type`: Int): Unit =
     throw new UnsupportedOperationException(s"Side effects changing the size, shape or allocation of the underlaying Mat object are not allowed from the Scala wrapper")
