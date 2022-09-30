@@ -57,13 +57,15 @@ trait Features {
     def canny(threshold1: Double, threshold2: Double): Image =
       canny(threshold1,threshold2,apertureSize = 3,l2Gradiant = false)
 
-    def cornerMinEigenVal(blockSize: Int, ksize: Int, borderType: BorderType /*=cv::BORDER_DEFAULT*/): Image = {
+    def cornerMinEigenVal(blockSize: Int, ksize: Int, borderType: BorderType): Mat[Float] = {
+      import i4s.opencv.core.model.mats.syntax._
+
       val dst = new org.bytedeco.opencv.opencv_core.Mat()
       opencv_imgproc.cornerMinEigenVal(image,dst,blockSize,ksize,borderType.id)
-      dst
+      new Mat[Float](dst)
     }
 
-    def cornerMinEigenVal(blockSize: Int): Image =
+    def cornerMinEigenVal(blockSize: Int): Mat[Float] =
       cornerMinEigenVal(blockSize,3,BorderTypes.Default)
 
     def cornerHarris(blockSize: Int, ksize: Int, k: Double, borderType: BorderType): Image = {
