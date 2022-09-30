@@ -1,6 +1,7 @@
 package i4s.opencv.core.model
 import i4s.opencv.core.types.Types
 import i4s.opencv.core.types.Types.Type
+import org.bytedeco.opencv.global.opencv_core
 
 import scala.reflect.ClassTag
 
@@ -12,6 +13,30 @@ package object mats {
 
     implicit class ScalarExprSupport(val self: Scalar) extends ScalarExpressions
     implicit class DoubleExprSupport(val self: Double) extends DoubleExpressions
+
+    def min[T <: AnyVal](left: Mat[T], right: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+      new MatExpr(opencv_core.min(left, right))
+
+    def min[T <: AnyVal](left: Mat[T], right: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+      new MatExpr(opencv_core.min(left,right))
+
+    def min[T <: AnyVal](left: Double, right: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+      new MatExpr(opencv_core.max(left,right))
+
+    def max[T <: AnyVal](left: Mat[T], right: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+      new MatExpr(opencv_core.max(left, right))
+
+    def max[T <: AnyVal](left: Mat[T], right: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+      new MatExpr(opencv_core.max(left,right))
+
+    def max[T <: AnyVal](left: Double, right: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+      new MatExpr(opencv_core.max(left,right))
+
+    def abs[T <: AnyVal](self: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+      new MatExpr(opencv_core.abs(self))
+
+    def abs[T <: AnyVal](self: MatExpr[T])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+      new MatExpr(opencv_core.abs(self))
 
     implicit val byteMatable: Matable[Byte] = new Matable[Byte] {
       override def depth: Type = Types.Cv8S

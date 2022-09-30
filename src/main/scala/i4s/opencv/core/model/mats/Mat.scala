@@ -1,6 +1,7 @@
 package i4s.opencv.core.model.mats
 
 import i4s.opencv.core.constants.AccessFlags.AccessFlag
+import i4s.opencv.core.constants.DecompositionMethods.DecompositionMethod
 import i4s.opencv.core.model.{Scalar, Size}
 import i4s.opencv.core.types.MatTypes
 import i4s.opencv.core.types.Types.Type
@@ -115,15 +116,11 @@ class Mat[T <: AnyVal : ClassTag](wrapped: org.bytedeco.opencv.opencv_core.Mat)(
   def putT2(values: (Int, Int, T)*): Unit = values.foreach { case (i, j, v) => put(i, j, v) }
   def putT3(values: (Int, Int, Int, T)*): Unit = values.foreach { case (i, j, k, v) => put(i, j, k, v) }
 
-  override def t(): MatExpr[T] = super.t()
-  override def inv(method: Int): MatExpr[T] = super.inv(method)
-  override def inv(): MatExpr[T] = super.inv()
+  override def t: MatExpr[T] = super.t()
+  def inv(method: DecompositionMethod): MatExpr[T] = super.inv(method.id)
+  override def inv: MatExpr[T] = super.inv()
   override def mul(m: opencv_core.Mat, scale: Double): MatExpr[T] = super.mul(m, scale)
   override def mul(m: opencv_core.Mat): MatExpr[T] = super.mul(m)
-  override def mul(m: UMat, scale: Double): MatExpr[T] = super.mul(m, scale)
-  override def mul(m: UMat): MatExpr[T] = super.mul(m)
-  override def mul(m: GpuMat, scale: Double): MatExpr[T] = super.mul(m, scale)
-  override def mul(m: GpuMat): MatExpr[T] = super.mul(m)
 
   import scala.language.implicitConversions
   implicit def fromNativeMatExpr(native: org.bytedeco.opencv.opencv_core.MatExpr): MatExpr[T] = new MatExpr[T](native)

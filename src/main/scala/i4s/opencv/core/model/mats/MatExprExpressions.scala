@@ -44,6 +44,8 @@ trait MatExprExpressions[T <: AnyVal] {
   def -(other: MatExpr[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
     new MatExpr(opencv_core.subtract(self,other))
 
+  def unary_-(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] = new MatExpr(opencv_core.subtract(self))
+
   def multiply(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
     new MatExpr(opencv_core.multiply(self,other))
 

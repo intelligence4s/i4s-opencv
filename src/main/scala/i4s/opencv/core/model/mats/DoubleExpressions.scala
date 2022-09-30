@@ -91,11 +91,4 @@ trait DoubleExpressions {
 
   def !=[T <: AnyVal](other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
     new MatExpr(opencv_core.notEquals(self, other))
-
-  def min[T <: AnyVal](other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-    new MatExpr(opencv_core.min(self, other))
-
-  def max[T <: AnyVal](other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-    new MatExpr(opencv_core.max(self, other))
-
 }

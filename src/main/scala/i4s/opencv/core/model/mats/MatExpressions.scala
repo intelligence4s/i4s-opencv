@@ -44,6 +44,9 @@ trait MatExpressions[T <: AnyVal] {
   def -(other: MatExpr[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
     new MatExpr(opencv_core.subtract(self,other))
 
+  def unary_-(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+    new MatExpr(opencv_core.subtract(self))
+
   def multiply(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
     new MatExpr(opencv_core.multiply(self,other))
 
@@ -92,76 +95,76 @@ trait MatExpressions[T <: AnyVal] {
   def /(other: MatExpr[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
     new MatExpr(opencv_core.divide(self,other))
     
-  def lessThan(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def lessThan(other: Mat[_ <: AnyVal])(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.lessThan(self,other))
 
-  def lessThan(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def lessThan(other: Double)(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.lessThan(self,other))
 
-  def <(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def <(other: Mat[_ <: AnyVal])(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.lessThan(self,other))
 
-  def <(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def <(other: Double)(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.lessThan(self,other))
 
-  def lessThanEquals(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def lessThanEquals(other: Mat[_ <: AnyVal])(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.lessThanEquals(self,other))
 
-  def lessThanEquals(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def lessThanEquals(other: Double)(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.lessThanEquals(self,other))
 
-  def <=(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def <=(other: Mat[_ <: AnyVal])(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.lessThanEquals(self,other))
 
-  def <=(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def <=(other: Double)(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.lessThanEquals(self,other))
 
-  def greaterThan(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def greaterThan(other: Mat[_ <: AnyVal])(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.greaterThan(self,other))
 
-  def greaterThan(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def greaterThan(other: Double)(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.greaterThan(self,other))
 
-  def >(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def >(other: Mat[_ <: AnyVal])(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.greaterThan(self,other))
 
-  def >(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def >(other: Double)(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.greaterThan(self,other))
 
-  def greaterThanEquals(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def greaterThanEquals(other: Mat[_ <: AnyVal])(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.greaterThanEquals(self,other))
 
-  def greaterThanEquals(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def greaterThanEquals(other: Double)(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.greaterThanEquals(self,other))
 
-  def >=(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def >=(other: Mat[_ <: AnyVal])(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.greaterThanEquals(self,other))
 
-  def >=(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def >=(other: Double)(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.greaterThanEquals(self,other))
   
-  def equals(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def equals(other: Mat[_ <: AnyVal])(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.equals(self, other))
 
-  def equals(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def equals(other: Double)(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.equals(self, other))
 
-  def ==(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def ==(other: Mat[_ <: AnyVal])(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.equals(self, other))
 
-  def ==(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def ==(other: Double)(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.equals(self, other))
 
-  def notEquals(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def notEquals(other: Mat[_ <: AnyVal])(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.notEquals(self, other))
 
-  def notEquals(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def notEquals(other: Double)(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.notEquals(self, other))
 
-  def !=(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def !=(other: Mat[_ <: AnyVal])(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.notEquals(self, other))
 
-  def !=(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def !=(other: Double)(implicit matable: Matable[Int]): MatExpr[Int] =
     new MatExpr(opencv_core.notEquals(self, other))
 
   def and(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
@@ -203,22 +206,6 @@ trait MatExpressions[T <: AnyVal] {
   def not(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
     new MatExpr(opencv_core.not(self))
 
-  def ~(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
+  def unary_~(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
     new MatExpr(opencv_core.not(self))
-
-  def min(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-    new MatExpr(opencv_core.min(self, other))
-
-  def min(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-    new MatExpr(opencv_core.min(self, other))
-
-  def max(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-    new MatExpr(opencv_core.max(self, other))
-
-  def max(other: Double)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-    new MatExpr(opencv_core.max(self, other))
-
-  def abs(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
-    new MatExpr(opencv_core.abs(self))
-
 }

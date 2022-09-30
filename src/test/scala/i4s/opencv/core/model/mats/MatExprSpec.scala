@@ -1,6 +1,7 @@
 package i4s.opencv.core.model.mats
 
 import i4s.opencv.core.model.Scalar
+import i4s.opencv.core.types.Types
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -86,7 +87,19 @@ class MatExprSpec extends AnyWordSpec with Matchers {
     }
 
     "support matrix negation" in {
+      val minusMat: Mat[Float] = -mat1
+      minusMat.getN(minusMat.total.toInt,0) shouldBe Array(-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f, -8.0f,
+        -9.0f, -10.0f, -11.0f, -12.0f, -13.0f, -14.0f, -15.0f, -16.0f, -17.0f, -18.0f, -19.0f, -20.0f, -21.0f, -22.0f,
+        -23.0f, -24.0f, -25.0f, -26.0f, -27.0f, -28.0f, -29.0f, -30.0f, -31.0f, -32.0f, -33.0f, -34.0f, -35.0f, -36.0f,
+        -37.0f, -38.0f, -39.0f, -40.0f, -41.0f, -42.0f, -43.0f, -44.0f, -45.0f, -46.0f, -47.0f, -48.0f, -49.0f, -50.0f,
+        -51.0f, -52.0f, -53.0f, -54.0f, -55.0f, -56.0f, -57.0f, -58.0f, -59.0f, -60.0f)
 
+      val minusMatExpr: Mat[Float] = -mat2.t()
+      minusMatExpr.getN(minusMat.total.toInt,0) shouldBe Array(-1.0f, -4.0f, -7.0f, -10.0f, -13.0f, -16.0f, -19.0f,
+        -22.0f, -25.0f, -28.0f, -31.0f, -34.0f, -37.0f, -40.0f, -43.0f, -46.0f, -49.0f, -52.0f, -55.0f, -58.0f, -2.0f,
+        -5.0f, -8.0f, -11.0f, -14.0f, -17.0f, -20.0f, -23.0f, -26.0f, -29.0f, -32.0f, -35.0f, -38.0f, -41.0f, -44.0f,
+        -47.0f, -50.0f, -53.0f, -56.0f, -59.0f, -3.0f, -6.0f, -9.0f, -12.0f, -15.0f, -18.0f, -21.0f, -24.0f, -27.0f,
+        -30.0f, -33.0f, -36.0f, -39.0f, -42.0f, -45.0f, -48.0f, -51.0f, -54.0f, -57.0f, -60.0f)
     }
 
     "support per-element division of matrices" in {
@@ -232,6 +245,72 @@ class MatExprSpec extends AnyWordSpec with Matchers {
 
       val fivePointFiveDoubleMultiplyBy: Mat[Float] = 5.5d * mat1
       fivePointFiveDoubleMultiplyBy.getN(fivePointFiveDoubleMultiplyBy.total.toInt, 0) shouldBe expectedValue
+    }
+
+    "supports boolean operators" in {
+      val smaller: Mat[Float] = mat1 - 1
+      val bigger: Mat[Float] = mat1 + 2
+
+      (smaller < mat1).getN(mat1.total.toInt,0) shouldBe Array.fill(mat1.total.toInt)(255)
+      (smaller > mat1).getN(mat1.total.toInt,0) shouldBe Array.fill(mat1.total.toInt)(0)
+
+      (smaller <= mat1).getN(mat1.total.toInt,0) shouldBe Array.fill(mat1.total.toInt)(255)
+      (smaller >= mat1).getN(mat1.total.toInt,0) shouldBe Array.fill(mat1.total.toInt)(0)
+      (mat1 <= mat1).getN(mat1.total.toInt,0) shouldBe Array.fill(mat1.total.toInt)(255)
+      (smaller >= mat1).getN(mat1.total.toInt,0) shouldBe Array.fill(mat1.total.toInt)(0)
+      (mat1 >= mat1).getN(mat1.total.toInt,0) shouldBe Array.fill(mat1.total.toInt)(255)
+
+      (smaller == mat1).getN(mat1.total.toInt, 0) shouldBe Array.fill(mat1.total.toInt)(0)
+      (mat1 == mat1).getN(mat1.total.toInt, 0) shouldBe Array.fill(mat1.total.toInt)(255)
+
+      (smaller != mat1).getN(mat1.total.toInt, 0) shouldBe Array.fill(mat1.total.toInt)(255)
+      (mat1 != mat1).getN(mat1.total.toInt, 0) shouldBe Array.fill(mat1.total.toInt)(0)
+    }
+
+    "supports logical operators" in {
+      val allOff = Mat[Int](5,5, Some(Types.Cv8U), Some(1), Scalar(0))
+      val allOn = Mat[Int](5,5, Some(Types.Cv8U), Some(1), Scalar(255))
+      val lowerOrder = Mat[Int](5,5, Some(Types.Cv8U), Some(1), Scalar(15))
+      val higherOrder = Mat[Int](5,5, Some(Types.Cv8U), Some(1), Scalar(240))
+
+      (allOff & allOn).getN(allOff.total.toInt,0) shouldBe Array.fill(allOn.total.toInt)(0)
+      (lowerOrder & higherOrder).getN(allOff.total.toInt,0) shouldBe Array.fill(allOn.total.toInt)(0)
+      (lowerOrder & allOn).getN(allOff.total.toInt,0) shouldBe Array.fill(allOn.total.toInt)(15)
+      (allOff | allOn).getN(allOff.total.toInt,0) shouldBe Array.fill(allOn.total.toInt)(255)
+      (lowerOrder | higherOrder).getN(allOff.total.toInt,0) shouldBe Array.fill(allOn.total.toInt)(255)
+      (lowerOrder | allOn).getN(allOff.total.toInt,0) shouldBe Array.fill(allOn.total.toInt)(255)
+      (lowerOrder ^ higherOrder).getN(allOff.total.toInt,0) shouldBe Array.fill(allOn.total.toInt)(255)
+      (lowerOrder ^ allOn).getN(allOff.total.toInt,0) shouldBe Array.fill(allOn.total.toInt)(240)
+
+      (~lowerOrder).getN(lowerOrder.total.toInt,0) shouldBe Array.fill(lowerOrder.total.toInt)(240)
+    }
+
+    "support min and max operations" in {
+      val noMoreThanFifty: Mat[Float] = min(mat1,50d)
+      noMoreThanFifty.getN(noMoreThanFifty.total.toInt,0) shouldBe Array(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f,
+        9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f,
+        25.0f, 26.0f, 27.0f, 28.0f, 29.0f, 30.0f, 31.0f, 32.0f, 33.0f, 34.0f, 35.0f, 36.0f, 37.0f, 38.0f, 39.0f, 40.0f,
+        41.0f, 42.0f, 43.0f, 44.0f, 45.0f, 46.0f, 47.0f, 48.0f, 49.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f,
+        50.0f, 50.0f, 50.0f, 50.0f)
+
+      val atLeastFifty: Mat[Float] = max(50d,mat1)
+      atLeastFifty.getN(atLeastFifty.total.toInt,0) shouldBe Array(50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f,
+        50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f,
+        50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f,
+        50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 50.0f, 51.0f, 52.0f, 53.0f, 54.0f, 55.0f,
+        56.0f, 57.0f, 58.0f, 59.0f, 60.0f)
+
+      min(mat1,mat2.t).getN(mat1.total.toInt,0) shouldBe Array(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f,
+        10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 2.0f, 5.0f, 8.0f, 11.0f, 14.0f,
+        17.0f, 20.0f, 23.0f, 26.0f, 29.0f, 31.0f, 32.0f, 33.0f, 34.0f, 35.0f, 36.0f, 37.0f, 38.0f, 39.0f, 40.0f, 3.0f,
+        6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 24.0f, 27.0f, 30.0f, 33.0f, 36.0f, 39.0f, 42.0f, 45.0f, 48.0f, 51.0f,
+        54.0f, 57.0f, 60.0f)
+
+      max(mat1.t,mat2).getN(mat1.total.toInt,0) shouldBe Array(1.0f, 21.0f, 41.0f, 4.0f, 22.0f, 42.0f, 7.0f, 23.0f,
+        43.0f, 10.0f, 24.0f, 44.0f, 13.0f, 25.0f, 45.0f, 16.0f, 26.0f, 46.0f, 19.0f, 27.0f, 47.0f, 22.0f, 28.0f, 48.0f,
+        25.0f, 29.0f, 49.0f, 28.0f, 30.0f, 50.0f, 31.0f, 32.0f, 51.0f, 34.0f, 35.0f, 52.0f, 37.0f, 38.0f, 53.0f, 40.0f,
+        41.0f, 54.0f, 43.0f, 44.0f, 55.0f, 46.0f, 47.0f, 56.0f, 49.0f, 50.0f, 57.0f, 52.0f, 53.0f, 58.0f, 55.0f, 56.0f,
+        59.0f, 58.0f, 59.0f, 60.0f)
     }
 
   }
