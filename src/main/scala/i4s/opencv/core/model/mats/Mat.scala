@@ -2,7 +2,7 @@ package i4s.opencv.core.model.mats
 
 import i4s.opencv.core.constants.AccessFlags.AccessFlag
 import i4s.opencv.core.constants.DecompositionMethods.DecompositionMethod
-import i4s.opencv.core.model.{Scalar, Size}
+import i4s.opencv.core.model.{Point, Scalar, Size}
 import i4s.opencv.core.types.MatTypes
 import i4s.opencv.core.types.Types.Type
 import org.bytedeco.opencv.opencv_core
@@ -12,6 +12,14 @@ import scala.annotation.tailrec
 import scala.reflect.ClassTag
 
 object Mat {
+  def apply(s: Scalar): Mat[Double] = {
+    import syntax._
+
+    val mat = Mat[Double](4)
+    mat.put(s.asArray)
+    mat
+  }
+
   def apply[T <: AnyVal](rows: Int)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     new Mat[T](new org.bytedeco.opencv.opencv_core.Mat(Array(rows),MatTypes.makeType(matable.depth,matable.channels)))
 
@@ -89,14 +97,40 @@ object Mat {
 
   def eye[T <: AnyVal](depth: Type, ch: Option[Int], rows: Int, cols: Int)(implicit matable: Matable[T], tag: ClassTag[T]): MatExpr[T] =
     new MatExpr[T](org.bytedeco.opencv.opencv_core.Mat.eye(rows,cols,MatTypes.makeType(depth,ch.getOrElse(matable.channels))))
+
+  def randomUniformDistribution[T <: AnyVal](size: Size, low: Scalar, high: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    Mat[T](size.height,size.width).randomUniformDistribution(low,high)
+
+  def randomUniformDistribution[T <: AnyVal](rows: Int, cols: Int, low: Scalar, high: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    Mat[T](rows,cols).randomUniformDistribution(low,high)
+
+  def randomUniformDistribution[T <: AnyVal](depth: Type, ch: Option[Int], size: Size, low: Scalar, high: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    Mat[T](depth,ch,size.height,size.width).randomUniformDistribution(low,high)
+
+  def randomUniformDistribution[T <: AnyVal](depth: Type, ch: Option[Int], rows: Int, cols: Int, low: Scalar, high: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    Mat[T](depth,ch,rows,cols).randomUniformDistribution(low,high)
+
+  def randomNormalDistribution[T <: AnyVal](size: Size, low: Scalar, high: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    Mat[T](size.height,size.width).randomNormalDistribution(low,high)
+
+  def randomNormalDistribution[T <: AnyVal](rows: Int, cols: Int, low: Scalar, high: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    Mat[T](rows,cols).randomNormalDistribution(low,high)
+
+  def randomNormalDistribution[T <: AnyVal](depth: Type, ch: Option[Int], size: Size, low: Scalar, high: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    Mat[T](depth,ch,size.height,size.width).randomNormalDistribution(low,high)
+
+  def randomNormalDistribution[T <: AnyVal](depth: Type, ch: Option[Int], rows: Int, cols: Int, low: Scalar, high: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    Mat[T](depth,ch,rows,cols).randomNormalDistribution(low,high)
 }
 
 class Mat[T <: AnyVal : ClassTag](wrapped: org.bytedeco.opencv.opencv_core.Mat)(implicit matable: Matable[T])
   extends BaseMat[T](wrapped) with MatMath[T] with MatExpressions[T]
 {
   def get(i: Int): T = matable.get(this,i)
+  def get(pt: Point): T = matable.get(this,pt.y,pt.x)
   def get(i: Int, is: Int*): T = matable.get(this, i +: is:_*)
 
+  def get(): IndexedSeq[T] = matable.getN(this,Array(0),this.total().toInt*this.channels())
   def getN(n: Int, i: Int): IndexedSeq[T] = matable.getN(this,Array(i),n)
   def getN(n: Int, i: Int, is: Int*): IndexedSeq[T] = matable.getN(this,i +: is,n)
 
@@ -111,6 +145,7 @@ class Mat[T <: AnyVal : ClassTag](wrapped: org.bytedeco.opencv.opencv_core.Mat)(
   def put(i: Int, values: Seq[T]): Unit = matable.putN(this,Array(i),values)
   def put(i: Int, j: Int, values: Seq[T]): Unit = matable.putN(this,Array(i,j),values)
   def put(indices: IndexedSeq[Int], values: Seq[T]): Unit = matable.putN(this,indices,values)
+  def put(v: T, vs: T*): Unit = matable.putN(this,Array(0),v +: vs)
 
   def putT1(values: (Int, T)*): Unit = values.foreach { case (i, v) => put(i, v) }
   def putT2(values: (Int, Int, T)*): Unit = values.foreach { case (i, j, v) => put(i, j, v) }

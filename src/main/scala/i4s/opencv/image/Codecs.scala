@@ -11,6 +11,16 @@ import java.io.File
 object Codecs {
   import Image._
 
+  def readImageFromResource(resourcePath: String): Option[Image] = {
+    val imageFile = new File(this.getClass.getClassLoader.getResource(resourcePath).getFile)
+    readImage(imageFile)
+  }
+
+  def readImage(filePath: String): Option[Image] = {
+    val imageFile = new File(filePath)
+    readImage(imageFile)
+  }
+
   def readImage(file: File): Option[Image] = readImage(file,ImageReadFlags.AnyColor)
   def readImage(file: File, readFlag: ImageReadFlag): Option[Image] = readImage(file,Set(readFlag))
   def readImage(file: File, readFlags: Set[ImageReadFlag]): Option[Image] = {

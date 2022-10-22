@@ -115,7 +115,7 @@ class MatSpec extends AnyWordSpec with Matchers {
     }
 
     "support a 1 dim array" in {
-      val mat = mats.Mat[Double](10, Scalar(0,0,0,0))
+      val mat = Mat[Double](10, Scalar(0,0,0,0))
 
       val values = (1 to 10).map(_.toDouble)
       mat.put(0, values)
@@ -135,7 +135,7 @@ class MatSpec extends AnyWordSpec with Matchers {
     }
 
     "support a 2 dim matrix" in {
-      val mat = mats.Mat[Double](10,10, Scalar(0,0,0,0))
+      val mat = Mat[Double](10,10, Scalar(0,0,0,0))
 
       val values = 1 to 100 map (_.toDouble)
       mat.put(0,values)
@@ -166,7 +166,7 @@ class MatSpec extends AnyWordSpec with Matchers {
     }
 
     "support a 3 dim matrix" in {
-      val mat = mats.Mat[Double](Scalar(0,0,0,0),2,10,10)
+      val mat = Mat[Double](Scalar(0,0,0,0),2,10,10)
 
       val value = 1 to 200 map (_.toDouble)
       mat.put(0, value)
@@ -195,6 +195,30 @@ class MatSpec extends AnyWordSpec with Matchers {
       assertThrows[IndexOutOfBoundsException](mat.get(2))
       assertThrows[IndexOutOfBoundsException](mat.get(1, 10))
       assertThrows[IndexOutOfBoundsException](println(mat.get(1,9,10)))
+    }
+
+    "support changing type" in {
+      val mat = Mat[Int](Types.Cv8U,Some(1),5,5)
+      mat.put(1 to 25)
+
+      val floats = mat.convertTo[Float]
+      floats.matType === MatTypes.Cv32FC1
+      floats.values.toArray === (1 to 25).map(_.toFloat).toArray
+    }
+
+    "support reshape" in {
+      val mat = Mat[Int](Types.Cv8U,Some(3),5,5)
+      mat.put(1 to 75)
+
+      val singleChannel = mat.reshape(1,5,5, 3)
+      singleChannel.shape() === Seq(5,5,3)
+      singleChannel.total === 75
+      singleChannel.values.toArray === (1 to 75).toArray
+
+      val singleChannelFloats = mat.reshapeTo[Float](1,5,5,3)
+      singleChannelFloats.shape() === Seq(5,5,3)
+      singleChannelFloats.total === 75
+      singleChannelFloats.values.toArray === (1 to 75).map(_.toFloat).toArray
     }
   }
 }

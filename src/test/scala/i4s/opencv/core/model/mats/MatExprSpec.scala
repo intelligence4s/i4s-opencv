@@ -8,7 +8,7 @@ import org.scalatest.wordspec.AnyWordSpec
 class MatExprSpec extends AnyWordSpec with Matchers {
 
   "Mat" should {
-    import i4s.opencv.core.model.mats.syntax._
+    import syntax._
 
     val mat1 = Mat[Float](3, 20)
 

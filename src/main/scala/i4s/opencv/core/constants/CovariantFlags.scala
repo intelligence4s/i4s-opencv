@@ -8,5 +8,5 @@ object CovariantFlags extends Enumeration {
   val UseAverage = Value(2)
   val Scale = Value(4)
   val Rows = Value(8)
-  val Cols = Value(16)
+  val Columns = Value(16)
 }

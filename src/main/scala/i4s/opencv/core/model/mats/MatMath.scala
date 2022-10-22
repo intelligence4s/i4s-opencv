@@ -11,7 +11,7 @@ import i4s.opencv.core.constants.ReduceTypes.ReduceType
 import i4s.opencv.core.constants.RotateCodes.RotateCode
 import i4s.opencv.core.constants.SingularValueDecompositionFlags.SingularValueDecompositionFlag
 import i4s.opencv.core.constants.SortFlags.SortFlag
-import i4s.opencv.core.constants.{CompareOps, DecompositionMethods}
+import i4s.opencv.core.constants.{CompareOps, DecompositionMethods, NormTypes}
 import i4s.opencv.core.model.{Point, Scalar}
 import i4s.opencv.core.types.{MatTypes, Types}
 import org.bytedeco.javacpp.{DoublePointer, IntPointer}
@@ -22,13 +22,13 @@ import scala.reflect.ClassTag
 
 object MatMath {
 
-  def mixChannels[T <: AnyVal](sources: IndexedSeq[Mat[T]], targets: IndexedSeq[Mat[T]], map: IndexedSeq[(Int,Int)]): Unit = {
-    opencv_core.mixChannels(new MatVector(sources:_*), new MatVector(targets:_*), new IntPointer(map.flatMap(t => Seq(t._1,t._2)):_*))
-  }
-
   def withNewMat[T <: AnyVal, R](fn: org.bytedeco.opencv.opencv_core.Mat => R)(implicit matable: Matable[T], tag: ClassTag[T]): R = {
     val mat = new org.bytedeco.opencv.opencv_core.Mat(0,0,MatTypes.makeType(matable.depth,matable.channels))
     fn(mat)
+  }
+
+  def mixChannels[T <: AnyVal](sources: IndexedSeq[Mat[T]], targets: IndexedSeq[Mat[T]], map: IndexedSeq[(Int,Int)]): Unit = {
+    opencv_core.mixChannels(new MatVector(sources:_*), new MatVector(targets:_*), new IntPointer(map.flatMap(t => Seq(t._1,t._2)):_*))
   }
 
   def polarToCart[T <: AnyVal](magnitude: Mat[T], angle: Mat[T], angleInDegrees: Boolean)(implicit matable: Matable[T], tag: ClassTag[T]): (Mat[T], Mat[T]) = {
@@ -84,7 +84,7 @@ object MatMath {
     }
   }
 
-  def mulSpectrums[T <: AnyVal](a: Mat[T], b: Mat[T], flags: Seq[DiscreteFourierTransformFlag], conjB: Boolean)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
+  def multiplySpectrums[T <: AnyVal](a: Mat[T], b: Mat[T], flags: Set[DiscreteFourierTransformFlag], conjB: Boolean)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
     val combined = flags.foldLeft(0)(_ | _.id)
     withNewMat { dst =>
       opencv_core.mulSpectrums(a, b, dst, combined, conjB)
@@ -92,7 +92,7 @@ object MatMath {
     }
   }
 
-  def mulSpectrums[T <: AnyVal](a: Mat[T], b: Mat[T], flags: Seq[DiscreteFourierTransformFlag])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
+  def multiplySpectrums[T <: AnyVal](a: Mat[T], b: Mat[T], flags: Set[DiscreteFourierTransformFlag])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
     val combined = flags.foldLeft(0)(_ | _.id)
     withNewMat { dst =>
       opencv_core.mulSpectrums(a, b, dst, combined)
@@ -123,71 +123,68 @@ trait MatMath[T <: AnyVal] {
 
   import MatMath._
 
-/*
-  def +(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,_) => opencv_core.add(self, other, dst))
+  def add(other: Mat[_ <: AnyVal], mask: Mat[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    doItInShape[T]((dst, _) => opencv_core.add(self, other, dst, mask, self.`type`))
 
-  def add(other: Mat[_ <: AnyVal], mask: Mat[Byte])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,depth) => opencv_core.add(self,other,dst,mask,depth))
-
-  def add(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,_) => opencv_core.add(self,other,dst))
-*/
-
-  def addTo[V <: AnyVal](other: Mat[_ <: AnyVal], mask: Mat[Byte])(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
-    doItInShape[V]((dst,depth) => opencv_core.add(self,other,dst,mask,depth))
+  def addTo[V <: AnyVal](other: Mat[_ <: AnyVal], mask: Mat[Int])(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
+    doItInShape[V] { (dst, depth) =>
+      withNewMat { mat =>
+        opencv_core.add(self, other, mat, mask, depth)
+        mat.convertTo(dst,MatTypes.makeType(matable.depth,self.channels()))
+      }
+    }
 
   def addTo[V <: AnyVal](other: Mat[_ <: AnyVal])(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
-    doItInShape[V]((dst,_) => opencv_core.add(self,other,dst))
+    doItInShape[V] { (dst, _) =>
+      withNewMat { mat =>
+        opencv_core.add(self, other, mat)
+        mat.convertTo(dst, MatTypes.makeType(matable.depth, self.channels()))
+      }
+    }
 
-/*
-  def -(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,_) => opencv_core.subtract(self,other,dst))
+  def subtract(other: Mat[_ <: AnyVal], mask: Mat[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    doItInShape[T]((dst, _) => opencv_core.subtract(self, other, dst, mask, self.`type`))
 
-  def subtract(other: Mat[_ <: AnyVal], mask: Mat[Byte])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,depth) => opencv_core.subtract(self,other,dst,mask,depth))
-
-  def subtract(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,_) => opencv_core.subtract(self,other,dst))
-*/
-
-  def subtractTo[V <: AnyVal](other: Mat[_ <: AnyVal], mask: Mat[Byte])(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
-    doItInShape[V]((dst,depth) => opencv_core.subtract(self,other,dst,mask,depth))
+  def subtractTo[V <: AnyVal](other: Mat[_ <: AnyVal], mask: Mat[Int])(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
+    doItInShape[V] { (dst, depth) =>
+      withNewMat { mat =>
+        opencv_core.subtract(self, other, mat, mask, depth)
+        mat.convertTo(dst, MatTypes.makeType(matable.depth, self.channels()))
+      }
+    }
 
   def subtractTo[V <: AnyVal](other: Mat[_ <: AnyVal])(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
-    doItInShape[V]((dst,_) => opencv_core.subtract(self,other,dst))
+    doItInShape[V] { (dst, _) =>
+      withNewMat { mat =>
+        opencv_core.subtract(self, other, mat)
+        mat.convertTo(dst, MatTypes.makeType(matable.depth, self.channels()))
+      }
+    }
 
   def x(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doItInShape[T]((dst, _) => opencv_core.multiply(self, other, dst))
 
-  def mul(other: Mat[_ <: AnyVal], scaleFactor: Double)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,depth) => opencv_core.multiply(self,other,dst,scaleFactor,depth))
-
-  def mul(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,_) => opencv_core.multiply(self,other,dst))
-
-  def mulTo[V <: AnyVal](other: Mat[_ <: AnyVal], scaleFactor: Double)(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
+  def multiplyTo[V <: AnyVal](other: Mat[_ <: AnyVal], scaleFactor: Double)(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
     doItInShape[V]((dst,depth) => opencv_core.multiply(self,other,dst,scaleFactor,depth))
 
-  def mulTo[V <: AnyVal](other: Mat[_ <: AnyVal])(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
-    doItInShape[V]((dst,_) => opencv_core.multiply(self,other,dst))
-
-/*
-  def /(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst, _) => opencv_core.divide(self, other, dst))
-
-  def divide(other: Mat[_ <: AnyVal], scaleFactor: Double)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst, depth) => opencv_core.divide(self, other, dst, scaleFactor, depth))
-
-  def divide(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst, _) => opencv_core.divide(self, other, dst))
-*/
+  def multiplyTo[V <: AnyVal](other: Mat[_ <: AnyVal])(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
+    doItInShape[V] { (dst, _) =>
+      withNewMat { mat =>
+        opencv_core.multiply(self, other, mat)
+        mat.convertTo(dst, MatTypes.makeType(matable.depth, self.channels()))
+      }
+    }
 
   def divideTo[V <: AnyVal](other: Mat[_ <: AnyVal], scaleFactor: Double)(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
     doItInShape[V]((dst, depth) => opencv_core.divide(self, other, dst, scaleFactor, depth))
 
   def divideTo[V <: AnyVal](other: Mat[_ <: AnyVal])(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
-    doItInShape[V]((dst, _) => opencv_core.divide(self, other, dst))
+    doItInShape[V] { (dst, _) =>
+      withNewMat { mat =>
+        opencv_core.divide(self, other, mat)
+        mat.convertTo(dst, MatTypes.makeType(matable.depth, self.channels()))
+      }
+    }
 
   def addScaled(other: Mat[_ <: AnyVal], alpha: Double)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doItInShape[T]((dst, _) => opencv_core.scaleAdd(self, alpha, other, dst))
@@ -195,8 +192,8 @@ trait MatMath[T <: AnyVal] {
   def addWeighted(alpha: Double, other: Mat[_ <: AnyVal], beta: Double, gamma: Double)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doItInShape[T]((dst, _) => opencv_core.addWeighted(self, alpha, other, beta, gamma, dst))
 
-  def addWeightedTo[V <: AnyVal](alpha: Double, other: Mat[_ <: AnyVal], beta: Double, gamma: Double)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst, depth) => opencv_core.addWeighted(self, alpha, other, beta, gamma, dst, depth))
+  def addWeightedTo[V <: AnyVal](alpha: Double, other: Mat[_ <: AnyVal], beta: Double, gamma: Double)(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
+    doItInShape[V]((dst, depth) => opencv_core.addWeighted(self, alpha, other, beta, gamma, dst, depth))
 
   def convertScaleAbs(alpha: Double, beta: Double)(implicit matable: Matable[Int], tag: ClassTag[Int]): Mat[Int] =
     doItInShape[Int]((dst, _) => opencv_core.convertScaleAbs(self, dst, alpha, beta))
@@ -204,50 +201,62 @@ trait MatMath[T <: AnyVal] {
   def convertScaleAbs()(implicit matable: Matable[Int], tag: ClassTag[Int]): Mat[Int] =
     doItInShape[Int]((dst, _) => opencv_core.convertScaleAbs(self, dst))
 
-  def lookupTransform(lut: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
-    assert(Types(self.depth) == Types.Cv8U, s"The lookup transform is valid for unsigned 8 bit matrices. this matrix is of ${Types(self.depth)}")
-    doItInShape[T]((dst, _) => opencv_core.LUT(self,lut,dst))
+  def lookupTransform[V <: AnyVal](lut: Mat[V])(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] = {
+    assert(Types(self.depth) == Types.Cv8U || Types(self.depth) == Types.Cv8S, s"The lookup transform is only valid for 8 bit matrices. this matrix is of ${Types(self.depth)}")
+    doItInShape[V]((dst, _) => opencv_core.LUT(self,lut,dst))
   }
 
   def countNonZero(): Int = opencv_core.countNonZero(self)
 
   def sumElements(): Scalar = opencv_core.sumElems(self)
 
-  def findNonZero(): Mat[Int] = {
+  def findNonZero(): Seq[Point] = {
     import i4s.opencv.core.model.mats.syntax._
 
-    val indices = Mat[Int](0)
-    opencv_core.findNonZero(self,indices)
-    indices
+    withNewMat[Int,Seq[Point]] { dst =>
+      opencv_core.findNonZero(self,dst)
+      val indexes = new Mat[Int](dst).values
+      indexes.sliding(2,2).map(points => Point(points:_*)).toList
+    }
   }
 
   def mean(mask: Mat[_ <: AnyVal]): Scalar = opencv_core.mean(self,mask)
 
   def mean(): Scalar = opencv_core.mean(self)
 
-  def meansWithStdDeviations(mask: Mat[_ <: AnyVal]): (Mat[Double],Mat[Double]) = {
+  def meansWithStdDeviation(mask: Mat[_ <: AnyVal]): (Scalar,Scalar) = {
     import i4s.opencv.core.model.mats.syntax._
 
-    val means = Mat[Double](0)
-    val deviations = Mat[Double](0)
-    opencv_core.meanStdDev(self,means,deviations,mask)
-    (means,deviations)
+    withNewMat[Double,(Scalar,Scalar)] { mean =>
+      withNewMat[Double,(Scalar,Scalar)] { stdDev =>
+        opencv_core.meanStdDev(self, mean, stdDev, mask)
+        (Scalar(new Mat[Double](mean).values:_*), Scalar(new Mat[Double](stdDev).values:_*))
+      }
+    }
   }
 
-  def meansWithStdDeviations: (Mat[Double],Mat[Double]) = {
+  def meansWithStdDeviation(): (Scalar,Scalar) = {
     import i4s.opencv.core.model.mats.syntax._
 
-    val means = Mat[Double](0)
-    val deviations = Mat[Double](0)
-    opencv_core.meanStdDev(self,means,deviations)
-    (means,deviations)
+    withNewMat[Double,(Scalar,Scalar)] { mean =>
+      withNewMat[Double,(Scalar,Scalar)] { stdDev =>
+        opencv_core.meanStdDev(self,mean,stdDev)
+        (Scalar(new Mat[Double](mean).values:_*), Scalar(new Mat[Double](stdDev).values:_*))
+      }
+    }
   }
 
   def norm(normType: NormType, mask: Mat[_ <: AnyVal]): Double = opencv_core.norm(self,normType.id,mask)
 
+  def norm(normType: NormType): Double = opencv_core.norm(self,normType.id,new org.bytedeco.opencv.opencv_core.Mat())
+
   def norm(): Double = opencv_core.norm(self)
 
-  def norm(other: Mat[T], normType: NormType, mask: Mat[_ <: AnyVal]): Double = opencv_core.norm(self,other,normType.id,mask)
+  def norm(other: Mat[T], normType: NormType, mask: Mat[_ <: AnyVal]): Double =
+    opencv_core.norm(self,other,normType.id,mask)
+
+  def norm(other: Mat[T], normType: NormType): Double =
+    opencv_core.norm(self,other,normType.id,new org.bytedeco.opencv.opencv_core.Mat())
 
   def norm(other: Mat[T]): Double = opencv_core.norm(self,other)
 
@@ -258,37 +267,44 @@ trait MatMath[T <: AnyVal] {
   def batchDistance(other: Mat[T], normType: NormType, k: Int, mask: Mat[_ <: AnyVal], update: Int, crossCheck: Boolean)(implicit matable: Matable[T], tag: ClassTag[T]): (Mat[T], Mat[Int]) = {
     import i4s.opencv.core.model.mats.syntax._
 
-    val indices = Mat[Int](0)
-    val dst = doItInShape[T]((dst,mtype) => opencv_core.batchDistance(self,other,dst,mtype,indices,normType.id,k,mask,update,crossCheck))
-    (dst,indices)
+    withNewMat[Int,(Mat[T],Mat[Int])] { indices =>
+      val dst = doItInShape[T]((dst,mtype) => opencv_core.batchDistance(self,other,dst,mtype,indices,normType.id,k,mask,update,crossCheck))
+      (dst,new Mat[Int](indices))
+    }
   }
 
   def batchDistance(other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): (Mat[T], Mat[Int]) = {
     import i4s.opencv.core.model.mats.syntax._
 
-    val indices = Mat[Int](0)
-    val dst = doItInShape[T]((dst,mtype) => opencv_core.batchDistance(self,other,dst,mtype,indices))
-    (dst,indices)
+    withNewMat[Int, (Mat[T], Mat[Int])] { indices =>
+      val dst = doItWithMask[T]((dst, mask, mtype) => opencv_core.batchDistance(self, other, dst, mtype, indices, NormTypes.L2.id,1, mask, 0, false))
+      (dst, new Mat[Int](indices))
+    }
   }
 
   def batchDistanceTo[V <: AnyVal](other: Mat[T], normType: NormType, k: Int, mask: Mat[_ <: AnyVal], update: Int, crossCheck: Boolean)(implicit matable: Matable[V], tag: ClassTag[V]): (Mat[V], Mat[Int]) = {
     import i4s.opencv.core.model.mats.syntax._
 
-    val indices = Mat[Int](0)
-    val dst = doItInShape[V]((dst,mtype) => opencv_core.batchDistance(self,other,dst,mtype,indices,normType.id,k,mask,update,crossCheck))
-    (dst,indices)
+    withNewMat[Int, (Mat[V], Mat[Int])] { indices =>
+      val dst = doItInShape[V]((dst, mtype) => opencv_core.batchDistance(self, other, dst, mtype, indices, normType.id, k, mask, update, crossCheck))
+      (dst, new Mat[Int](indices))
+    }
   }
 
   def batchDistanceTo[V <: AnyVal](other: Mat[T])(implicit matable: Matable[V], tag: ClassTag[V]): (Mat[V], Mat[Int]) = {
     import i4s.opencv.core.model.mats.syntax._
 
-    val indices = Mat[Int](0)
-    val dst = doItInShape[V]((dst,mtype) => opencv_core.batchDistance(self,other,dst,mtype,indices))
-    (dst,indices)
+    withNewMat[Int, (Mat[V], Mat[Int])] { indices =>
+      val dst = doItWithMask[V]((dst, mask, mtype) => opencv_core.batchDistance(self, other, dst, mtype, indices, NormTypes.L2.id,1, mask, 0, false))
+      (dst, new Mat[Int](indices))
+    }
   }
 
   def normalize(alpha: Double, beta: Double, normType: NormType, mask: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doItInShape[T]((dst,mtype) => opencv_core.normalize(self,dst,alpha,beta,normType.id,mtype,mask))
+
+  def normalize(alpha: Double, beta: Double, normType: NormType)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    doItWithMask[T]((dst,mask,mtype) => opencv_core.normalize(self,dst,alpha,beta,normType.id,mtype,mask))
 
   def normalize()(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doItInShape[T]((dst,mtype) => opencv_core.normalize(self,dst))
@@ -297,11 +313,16 @@ trait MatMath[T <: AnyVal] {
     doItInShape[V]((dst,mtype) => opencv_core.normalize(self,dst,alpha,beta,normType.id,mtype,mask))
 
   def normalizeTo[V <: AnyVal]()(implicit matable: Matable[V], tag: ClassTag[V]): Mat[V] =
-    doItInShape[V]((dst,_) => opencv_core.normalize(self,dst))
+    doItInShape[V] { (dst, _) =>
+      withNewMat { mat =>
+        opencv_core.normalize(self, mat)
+        mat.convertTo(dst, MatTypes.makeType(matable.depth, self.channels()))
+      }
+    }
 
   def minMaxWithLocation(mask: Mat[_ <: AnyVal]): (Double, Double, Point, Point) = {
-    val minValue = new DoublePointer()
-    val maxValue = new DoublePointer()
+    val minValue = new DoublePointer(1)
+    val maxValue = new DoublePointer(1)
     val minLoc = Point()
     val maxLoc = Point()
 
@@ -326,36 +347,33 @@ trait MatMath[T <: AnyVal] {
 
   def reduceArgMin(axis: Int, lastIndex: Boolean): Mat[Int] = {
     import i4s.opencv.core.model.mats.syntax._
-    val dst = Mat[Int](0)
-    opencv_core.reduceArgMin(self,dst,axis,lastIndex)
-    dst
+    doIt[Int]((dst,_) => opencv_core.reduceArgMin(self,dst,axis,lastIndex))
   }
 
   def reduceArgMin(axis: Int): Mat[Int] = reduceArgMin(axis,lastIndex = false)
 
   def reduceArgMax(axis: Int, lastIndex: Boolean): Mat[Int] = {
     import i4s.opencv.core.model.mats.syntax._
-    val dst = Mat[Int](0)
-    opencv_core.reduceArgMin(self, dst, axis, lastIndex)
-    dst
+    doIt[Int]((dst,_) => opencv_core.reduceArgMax(self,dst,axis,lastIndex))
   }
 
   def reduceArgMax(axis: Int): Mat[Int] = reduceArgMax(axis,lastIndex = false)
 
-  def minMaxIdx(mask: Mat[Int]): (Double,Double,Int,Int) = {
-    val minValue = new DoublePointer()
-    val maxValue = new DoublePointer()
-    val minIndexValue = new IntPointer()
-    val maxIndexValue = new IntPointer()
-    opencv_core.minMaxIdx(self,minValue,maxValue,minIndexValue,maxIndexValue,mask)
+  def minMaxWithIndexes(mask: Mat[Int]): (Double,Double,IndexedSeq[Int],IndexedSeq[Int]) = {
+    val minValue = new Array[Double](1)
+    val maxValue = new Array[Double](1)
 
-    (minValue.get(),maxValue.get(),minIndexValue.get(),maxIndexValue.get())
+    val dims = self.dims()
+    val minIndexValues = new Array[Int](dims)
+    val maxIndexValues = new Array[Int](dims)
+    opencv_core.minMaxIdx(self,minValue,maxValue,minIndexValues,maxIndexValues,mask)
+    (minValue(0),maxValue(0),minIndexValues,maxIndexValues)
   }
 
-  def minMaxIdx(): (Double, Double, Int, Int) = {
+  def minMaxWithIndexes(): (Double,Double,IndexedSeq[Int],IndexedSeq[Int]) = {
     import i4s.opencv.core.model.mats.syntax._
     val mask = Mat[Int](0)
-    minMaxIdx(mask)
+    minMaxWithIndexes(mask)
   }
 
   def reduce(dim: Int, rtype: ReduceType)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
@@ -375,28 +393,24 @@ trait MatMath[T <: AnyVal] {
     results.get().toSeq.map(m => new Mat[T](m))
   }
 
-  def mixChannels(map: IndexedSeq[(Int, Int)])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
-    val shape = self.shape
-    val dst = Mat[T](Types(self.depth),Some(shape.size),shape.head,shape.tail:_*)
-
-    opencv_core.mixChannels(new MatVector(self), new MatVector(dst), new IntPointer(map.flatMap(t => Seq(t._1, t._2)): _*))
-    dst
-  }
-
   def extractChannel(index: Int)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doIt[T]((dst,_) => opencv_core.extractChannel(self,dst,index))
 
-  def insertChannel(index: Int)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doIt[T]((dst,_) => opencv_core.insertChannel(self,dst,index))
+  def insertChannel(index: Int, insert: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
+    doItInShape[T] { (dst, _) =>
+      self.copyTo(dst)
+      opencv_core.insertChannel(insert, dst, index)
+    }
+  }
 
   def flip(flipCode: FlipCode)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doIt[T]((dst,_) => opencv_core.flip(self,dst,flipCode.id))
 
-  def rotate(rotateCode: RotateCode)(implicit matable: Matable[T], tag: ClassTag[T]): Unit =
+  def rotate(rotateCode: RotateCode)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doIt[T]((dst,_) => opencv_core.rotate(self,dst,rotateCode.id))
 
   def repeat(yRepeat: Int, xRepeat: Int)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doIt[T]((dst,_) => opencv_core.repeat(self,yRepeat,xRepeat))
+    new Mat[T](opencv_core.repeat(self,yRepeat,xRepeat))
 
   def hconcat(other: Mat[T], others: Mat[T]*)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
     val mats = new MatVector(self +: other  +: others)
@@ -408,21 +422,11 @@ trait MatMath[T <: AnyVal] {
     doIt[T]((dst,_) => opencv_core.vconcat(mats,dst))
   }
 
-/*
-  def &(other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,_) => opencv_core.bitwise_and(self,other,dst))
-*/
-
   def bitwiseAnd(other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
   doItInShape[T]((dst,_) => opencv_core.bitwise_and(self,other,dst))
 
   def bitwiseAnd(other: Mat[T], mask: Mat[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
   doItInShape[T]((dst,_) => opencv_core.bitwise_and(self,other,dst,mask))
-
-/*
-  def |(other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,_) => opencv_core.bitwise_or(self,other,dst))
-*/
 
   def bitwiseOr(other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
   doItInShape[T]((dst,_) => opencv_core.bitwise_or(self,other,dst))
@@ -430,21 +434,11 @@ trait MatMath[T <: AnyVal] {
   def bitwiseOr(other: Mat[T], mask: Mat[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
   doItInShape[T]((dst,_) => opencv_core.bitwise_or(self,other,dst,mask))
 
-/*
-  def ^(other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,_) => opencv_core.bitwise_xor(self,other,dst))
-*/
-
   def bitwiseXor(other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
   doItInShape[T]((dst,_) => opencv_core.bitwise_xor(self,other,dst))
 
   def bitwiseXor(other: Mat[T], mask: Mat[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
   doItInShape[T]((dst,_) => opencv_core.bitwise_xor(self,other,dst,mask))
-
-/*
-  def ~ (implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,_) => opencv_core.bitwise_not(self,dst))
-*/
 
   def bitwiseNot(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doItInShape[T]((dst,_) => opencv_core.bitwise_not(self,dst))
@@ -452,19 +446,15 @@ trait MatMath[T <: AnyVal] {
   def bitwiseNot(mask: Mat[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doItInShape[T]((dst,_) => opencv_core.bitwise_not(self,dst,mask))
 
-  def absdiff(other: Mat[T], mask: Mat[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,_) => opencv_core.absdiff(self,dst,mask))
-
-  def absdiff(other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
-    doItWithMask[T]((dst,mask,_) => opencv_core.absdiff(self,dst,mask))
+  def absoluteDiff(other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
+    doItInShape[T]((dst,_) => opencv_core.absdiff(self,other,dst))
   }
 
-  def copyTo(other: Mat[T], mask: Mat[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doItInShape[T]((dst,_) => opencv_core.copyTo(self,dst,mask))
-
-  def copyTo(other: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
-    doItWithMask[T]((dst,mask,_) => opencv_core.copyTo(self,dst,mask))
-  }
+  def copy(mask: Mat[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    doItInShape[T] { (dst, _) =>
+      dst.put(Scalar(0))
+      opencv_core.copyTo(self, dst, mask)
+    }
 
   def inRange(lowerb: Mat[T], upperb: Mat[T]): Mat[Int] = {
     import i4s.opencv.core.model.mats.syntax._
@@ -512,24 +502,28 @@ trait MatMath[T <: AnyVal] {
   def log()(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doIt[T]((dst, _) => opencv_core.log(self, dst))
 
-  def polarToCart(angleInDegrees: Boolean)(implicit matable: Matable[T], tag: ClassTag[T]): (Mat[T],Mat[T]) = {
+  def polarToCartesian(angleInDegrees: Boolean)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
     val Seq(angle,magnitude) = self.split().take(2)
-    MatMath.polarToCart(magnitude,angle,angleInDegrees)
+    val (x,y) = MatMath.polarToCart(magnitude,angle,angleInDegrees)
+    x.merge(y)
   }
 
-  def polarToCart()(implicit matable: Matable[T], tag: ClassTag[T]): (Mat[T],Mat[T]) = {
+  def polarToCartesian()(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
     val Seq(angle,magnitude) = self.split().take(2)
-    MatMath.polarToCart(magnitude,angle)
+    val (x,y) = MatMath.polarToCart(magnitude,angle)
+    x.merge(y)
   }
 
-  def cartToPolar(angleInDegrees: Boolean)(implicit matable: Matable[T], tag: ClassTag[T]): (Mat[T],Mat[T]) = {
+  def cartesianToPolar(angleInDegrees: Boolean)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
     val Seq(x,y) = self.split().take(2)
-    MatMath.cartToPolar(x,y,angleInDegrees)
+    val (angle,magnitude) = MatMath.cartToPolar(x,y,angleInDegrees)
+    angle.merge(magnitude)
   }
 
-  def cartToPolar()(implicit matable: Matable[T], tag: ClassTag[T]): (Mat[T],Mat[T]) = {
+  def cartesianToPolar()(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
     val Seq(x,y) = self.split().take(2)
-    MatMath.cartToPolar(x,y)
+    val (angle, magnitude) = MatMath.cartToPolar(x, y)
+    angle.merge(magnitude)
   }
 
   def phase(angleInDegrees: Boolean)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
@@ -548,11 +542,11 @@ trait MatMath[T <: AnyVal] {
   }
 
   def checkRangeWithPos(quiet: Boolean, minVal: Double, maxVal: Double): (Boolean,Option[Point]) = {
-    val pos = Point()
+    val pos = new org.bytedeco.opencv.opencv_core.Point(0,0)
     val isValid = opencv_core.checkRange(self,quiet,pos,minVal,maxVal)
 
     if (isValid) (true,None)
-    else (false,Some(pos))
+    else (false,Some(Point(pos)))
   }
 
   def checkRangeWithPos(): (Boolean,Option[Point]) =
@@ -564,10 +558,10 @@ trait MatMath[T <: AnyVal] {
   def checkRange(): Boolean =
     checkRangeWithPos(quiet = true,minVal = -Double.MaxValue,maxVal = Double.MaxValue)._1
 
-  def patchNode(value: Double): Unit =
+  def pathNaNs(value: Double): Unit =
     opencv_core.patchNaNs(self,value)
 
-  def patchNode(): Unit =
+  def patchNaNs(): Unit =
     opencv_core.patchNaNs(self)
 
   def generalizedMatrixMultiply(first: Mat[T], alpha: Double, second: Mat[T], beta: Double, flags: Set[GeneralizedMatrixMultiplyFlag])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
@@ -586,24 +580,19 @@ trait MatMath[T <: AnyVal] {
     }
   }
 
-/*
-  def *(other: Mat[_ <: AnyVal])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    generalizedMatrixMultiply(other,1d)
-*/
-
   def generalizedMatrixMultiply(first: Mat[T], alpha: Double)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     generalizedMatrixMultiply(first,alpha,Set())
 
-  def mulTransposed(aTa: Boolean, delta: Mat[T], scale: Double /*=1*/)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-     doIt[T]((dst,mtype) => opencv_core.mulTransposed(self,dst,aTa,delta,scale,mtype))
+  def multiplyTransposed(transposeFirst: Boolean, delta: Mat[T], scale: Double /*=1*/)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+     doIt[T]((dst,mtype) => opencv_core.mulTransposed(self,dst,transposeFirst,delta,scale,mtype))
 
-  def mulTransposed(aTa: Boolean)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doIt[T]((dst,_) => opencv_core.mulTransposed(self,dst,aTa))
+  def multiplyTransposed(transposeFirst: Boolean)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    doIt[T]((dst,_) => opencv_core.mulTransposed(self,dst,transposeFirst))
 
   def transpose()(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doIt[T]((dst,_) => opencv_core.transpose(self,dst))
 
-  def transposeND(order: Seq[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+  def nDimensionalTranspose(order: Seq[Int])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doIt[T]((dst,_) => opencv_core.transposeND(self,order.toArray,dst))
 
   def transform(m: Mat[Float])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
@@ -630,12 +619,12 @@ trait MatMath[T <: AnyVal] {
 
   def solve(src2: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): (Boolean, Mat[T]) = solve(src2,DecompositionMethods.Lu)
 
-  def sort(flags: Seq[SortFlag])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
+  def sort(flags: Set[SortFlag])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
     val combined = flags.foldLeft(0)(_ | _.id)
     doItInShape[T]((dst,_) => opencv_core.sort(self,dst,combined))
   }
 
-  def sortIdx(flags: Seq[SortFlag]): Mat[Int] = {
+  def sortIdx(flags: Set[SortFlag]): Mat[Int] = {
     import i4s.opencv.core.model.mats.syntax._
 
     val combined = flags.foldLeft(0)(_ | _.id)
@@ -661,27 +650,36 @@ trait MatMath[T <: AnyVal] {
   def eigenNonSymmetric()(implicit matable: Matable[T], tag: ClassTag[T]): (Mat[T], Mat[T]) = {
     withNewMat { eValues =>
       withNewMat { eVectors =>
-        opencv_core.eigen(self, eValues, eVectors)
+        opencv_core.eigenNonSymmetric(self, eValues, eVectors)
         (new Mat[T](eValues), new Mat[T](eVectors))
       }
     }
   }
 
   def completeSymm(lowerToUpper: Boolean)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
-    val dst = Mat[T](self)
-    opencv_core.completeSymm(dst,lowerToUpper)
-    dst
+    withNewMat { inputOutput =>
+      self.copyTo(inputOutput)
+      opencv_core.completeSymm(inputOutput,lowerToUpper)
+      new Mat[T](inputOutput)
+    }
   }
 
-  def completeSymm()(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
-    val dst = Mat[T](self)
-    opencv_core.completeSymm(dst)
-    dst
-  }
+  def completeSymm()(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    completeSymm(lowerToUpper = false)
 
-  def setIdentity(s: Scalar): Unit = opencv_core.setIdentity(self,s)
+  def setIdentity(s: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    withNewMat { inputOutput =>
+      self.copyTo(inputOutput)
+      opencv_core.setIdentity(inputOutput,s)
+      new Mat[T](inputOutput)
+    }
 
-  def setIdentity(): Unit = opencv_core.setIdentity(self)
+  def setIdentity()(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    withNewMat { inputOutput =>
+      self.copyTo(inputOutput)
+      opencv_core.setIdentity(inputOutput)
+      new Mat[T](inputOutput)
+    }
 
   def determinant(): Double = opencv_core.determinant(self)
 
@@ -690,29 +688,31 @@ trait MatMath[T <: AnyVal] {
   def solveCubic(): (Int, Mat[Double]) = {
     import i4s.opencv.core.model.mats.syntax._
 
-    val roots = Mat[Double](0)
-    val result = opencv_core.solveCubic(self,roots)
-    (result,roots)
+    withNewMat[Double,(Int, Mat[Double])] { roots =>
+      val result = opencv_core.solveCubic(self,roots)
+      (result,new Mat[Double](roots))
+    }
   }
 
   def solvePoly(maxIters: Int): (Double,Mat[Double]) = {
     import i4s.opencv.core.model.mats.syntax._
 
-    val roots = Mat[Double](0)
-    val result = opencv_core.solvePoly(self, roots, maxIters)
-    (result, roots)
+    withNewMat[Double, (Double, Mat[Double])] { roots =>
+      val result = opencv_core.solvePoly(self, roots, maxIters)
+      (result, new Mat[Double](roots))
+    }
   }
 
   def solvePoly(): (Double,Mat[Double]) = solvePoly(300)
 
-  def calcCovariantMatrix(flags: Seq[CovariantFlag]): (Mat[Double],Mat[Double]) = {
-    import i4s.opencv.core.model.mats.syntax._
-
+  def calcCovariantMatrix(flags: Set[CovariantFlag])(implicit matable: Matable[T], tag: ClassTag[T]): (Mat[T],Mat[T]) = {
     val combined = flags.foldLeft(0)(_ | _.id)
-    val covariants = Mat[Double](0)
-    val means = Mat[Double](0)
-    opencv_core.calcCovarMatrix(self,covariants,means,combined)
-    (covariants,means)
+    withNewMat[T, (Mat[T], Mat[T])] { covariants =>
+      withNewMat[T, (Mat[T], Mat[T])] { means =>
+        opencv_core.calcCovarMatrix(self, covariants, means, combined, covariants.depth())
+        (new Mat[T](covariants), new Mat[T](means))
+      }
+    }
   }
 
   def dft(flags: Seq[DiscreteFourierTransformFlag], nonzeroRows: Int)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] = {
@@ -747,17 +747,25 @@ trait MatMath[T <: AnyVal] {
   def idct()(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
     doIt[T]((dst, _) => opencv_core.idct(self, dst))
 
-  def randomUniformDistribution(low: Mat[T], high: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doIt[T]((dst,_) => opencv_core.randu(dst,low,high))
+  def randomUniformDistribution(low: Scalar, high: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    doItInShape[T]((dst,_) => opencv_core.randu(dst,Mat(low),Mat(high)))
 
-  def randomNormalDistribution(mean: Mat[T], stddev: Mat[T])(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doIt[T]((dst,_) => opencv_core.randn(dst,mean,stddev))
+  def randomNormalDistribution(mean: Scalar, stddev: Scalar)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
+    doItInShape[T]((dst,_) => opencv_core.randn(dst,Mat(mean),Mat(stddev)))
 
   def randomShuffle()(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doIt[T]((dst,_) => opencv_core.randShuffle(dst))
+    withNewMat[T,Mat[T]] { dst =>
+      self.copyTo(dst)
+      opencv_core.randShuffle(dst)
+      new Mat[T](dst)
+    }
 
   def randomShuffle(iterFactor: Double /*=1.*/ , rng: RNG)(implicit matable: Matable[T], tag: ClassTag[T]): Mat[T] =
-    doIt[T]((dst,_) => opencv_core.randShuffle(dst,iterFactor,rng))
+    withNewMat[T, Mat[T]] { dst =>
+      self.copyTo(dst)
+      opencv_core.randShuffle(dst,iterFactor,rng)
+      new Mat[T](dst)
+    }
 
   def svDecomp(flags: Seq[SingularValueDecompositionFlag])(implicit matable: Matable[T], tag: ClassTag[T]): (Mat[T], Mat[T], Mat[T]) = {
     val combined = flags.foldLeft(0)(_ | _.id)
@@ -774,7 +782,8 @@ trait MatMath[T <: AnyVal] {
 
   def svDecomp()(implicit matable: Matable[T], tag: ClassTag[T]): (Mat[T], Mat[T], Mat[T]) = svDecomp(Seq.empty[SingularValueDecompositionFlag])
 
-  /*
+  /* TODO implement PCA methods...
+
     def PCACompute(data: Mat, mean: Mat, eigenvectors: Mat, maxComponents: Int): Unit
 
     def PCACompute(data: Mat, mean: Mat, eigenvectors: Mat): Unit

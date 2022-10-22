@@ -67,6 +67,8 @@ object Image {
 class Image(wrapped: org.bytedeco.opencv.opencv_core.Mat) extends MappedMat[Scalar,Int](wrapped) {
   assert(Types(depth) == Cv8U, s"Unexpected type - ${Types(depth)}, Only Mats with depth = ${Types.Cv8U} are allowed")
 
+  def toMat: Mat[Int] = new Mat[Int](this)
+
   def getUMat(flag: AccessFlag): org.bytedeco.opencv.opencv_core.UMat = super.getUMat(flag.id)
 
   def toBufferedImage: BufferedImage = {
@@ -82,8 +84,7 @@ class Image(wrapped: org.bytedeco.opencv.opencv_core.Mat) extends MappedMat[Scal
   def dataType: Type = Types(super.depth)
 
   def description: String = {
-    val sizeString = s"${size().width} x ${size().height()}"
-    s"Image(Mat) (${dims()}) = [${sizeString}] - type: ${matType} (${`type`()}), channels = $channels, dataType = $dataType, total = $total "
+    s"Image(Mat) (${dims()}) = [${size()}] - type: ${matType} (${`type`()}), channels = $channels, dataType = $dataType, total = $total "
   }
 
 }
